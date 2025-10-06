@@ -142,6 +142,7 @@ with tab3:
             location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
             popup=row.get("AddressInfo.Title", "Charging Station")
         ).add_to(marker_cluster)
-    st_folium(m, width=800, height=600, tiles="cartodbpositron")  # render after
+    st_folium(m, width=800, height=600)  # render after
+
 
 
