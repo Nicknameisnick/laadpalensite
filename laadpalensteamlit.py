@@ -7,6 +7,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 import folium
 from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
@@ -46,6 +47,10 @@ with tab3:
             location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
             popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
         ).add_to(marker_cluster)
+
+    # render map
+    st_folium(m, width=800, height=600)
+
 
 
 
