@@ -11,7 +11,9 @@ from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
+# -------------------------------
 # 🚀 Cached Functions
+# -------------------------------
 
 @st.cache_data(ttl=3600)  # cache for 1 hour
 def load_data():
@@ -44,7 +46,8 @@ def load_data():
 
 
 @st.cache_resource
-def build_map(laadpalen_gdf):
+def build_map():
+    laadpalen_gdf = load_data()
     m = folium.Map(location=[52.1, 5.3], zoom_start=8)
     marker_cluster = MarkerCluster().add_to(m)
 
@@ -57,9 +60,9 @@ def build_map(laadpalen_gdf):
     return m
 
 
-
+# -------------------------------
 # 📊 Streamlit Layout
-
+# -------------------------------
 
 st.sidebar.title("Controls")
 
@@ -73,9 +76,6 @@ tab1, tab2, tab3 = st.tabs([
     "Laadpalen map"
 ])
 
-# Load data once (cached)
-Laadpalen1 = load_data()
-
 with tab3:
-    m = build_map(Laadpalen1)
+    m = build_map()
     st_folium(m, width=800, height=600)
