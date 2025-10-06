@@ -146,4 +146,5 @@ with tab1:
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()  # build first
-    st_folium(m, width=800, height=600)  # render after
+    st_folium(m, width=800, height=600, tiles="cartodbpositron")  # render after
+
