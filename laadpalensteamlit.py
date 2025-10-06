@@ -53,7 +53,7 @@ tab1, tab2, tab3 = st.tabs([
 
 # Tab 1: Voertuigverdeling
 with tab1:
-
+    
 # Load the dataset (skip the fake header row)
 df = pd.read_csv("personenautos_csb.csv", sep=";", header=None, skiprows=[0])
 
@@ -137,10 +137,12 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
+
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
