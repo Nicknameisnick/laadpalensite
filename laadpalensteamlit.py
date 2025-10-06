@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+import geopandas as gpd
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
@@ -28,6 +29,7 @@ tab1, tab2, tab3 = st.tabs([
    "Oplaad data",
    "Laadpalen map"
 ])
+
 
 
 
