@@ -118,16 +118,6 @@ def auto_per_maand(data_cars):
     with col2:
         st.plotly_chart(fig_hist, use_container_width=True)
 
-def build_map():
-    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
-    marker_cluster = MarkerCluster().add_to(m)
-    for _, row in Laadpalen1.iterrows():
-        folium.Marker(
-            location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
-            popup=row.get("AddressInfo.Title", "Charging Station")
-        ).add_to(marker_cluster)
-    return m
-
 # -------------------------------
 # Tabs
 # -------------------------------
@@ -145,6 +135,13 @@ with tab1:
 
 # Tab 3: Laadpalen map
 with tab3:
-    m = build_map()  # build first
+    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
+    marker_cluster = MarkerCluster().add_to(m)
+    for _, row in Laadpalen1.iterrows():
+        folium.Marker(
+            location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
+            popup=row.get("AddressInfo.Title", "Charging Station")
+        ).add_to(marker_cluster)
     st_folium(m, width=800, height=600, tiles="cartodbpositron")  # render after
+
 
