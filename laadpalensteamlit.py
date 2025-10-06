@@ -157,7 +157,78 @@ with tab1:
     data_cars['brandstof'] = data_cars['handelsbenaming'].apply(bepaal_brandstof)
     auto_per_maand(data_cars)
 
+    # -------------------------------
+    # Nieuwe grafiek: brandstof per jaar (2015–2025)
+    # -------------------------------
+
+    # Laad de data (uit je repo-bestand)
+    brandstof_per_year = pd.read_csv("brandstof_per_year.csv", index_col=0)
+
+    # Maak ook een totaalrij ("All Years")
+    brandstof_per_year.loc["Totaal"] = brandstof_per_year.sum()
+
+    # Smelten voor Plotly
+    df_long = brandstof_per_year.reset_index().melt(
+        id_vars="index", var_name="Brandstof", value_name="Aantal"
+    )
+    df_long.rename(columns={"index": "Jaar"}, inplace=True)
+
+    # Dropdownopties (jaren + totaal)
+    jaren = sorted(df_long["Jaar"].unique(), reverse=True)
+    dropdown_options = [
+        {"label": str(jaar), "value": str(jaar)} for jaar in jaren
+    ]
+
+    # Plotly express maakt eerst een standaard grafiek
+    fig_years = px.bar(
+        df_long[df_long["Jaar"] == jaren[0]],  # start met meest recente jaar
+        x="Brandstof",
+        y="Aantal",
+        color="Brandstof",
+        text="Aantal",
+        title=f"Aantal voertuigen per brandstofsoort ({jaren[0]})",
+    )
+
+    # Voeg dropdown toe
+    fig_years.update_traces(textposition="outside")
+    fig_years.update_layout(
+        updatemenus=[
+            {
+                "buttons": [
+                    {
+                        "label": str(jaar),
+                        "method": "update",
+                        "args": [
+                            {
+                                "x": [df_long[df_long["Jaar"] == str(jaar)]["Brandstof"]],
+                                "y": [df_long[df_long["Jaar"] == str(jaar)]["Aantal"]],
+                                "marker": {"color": px.colors.qualitative.Set3},
+                                "text": [df_long[df_long["Jaar"] == str(jaar)]["Aantal"]],
+                            },
+                            {
+                                "title": f"Aantal voertuigen per brandstofsoort ({jaar})",
+                            },
+                        ],
+                    }
+                    for jaar in jaren
+                ],
+                "direction": "down",
+                "showactive": True,
+                "x": 0.0,
+                "xanchor": "left",
+                "y": 1.15,
+                "yanchor": "top",
+            }
+        ],
+        xaxis_title="Brandstof",
+        yaxis_title="Aantal voertuigen",
+        bargap=0.2,
+    )
+
+    st.plotly_chart(fig_years, use_container_width=True)
+
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
