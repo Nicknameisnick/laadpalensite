@@ -4,6 +4,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 import geopandas as gpd
+from shapely.geometry import Point
+import folium
+from folium.plugins import MarkerCluster
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
@@ -44,6 +47,7 @@ with tab3:
             popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
         ).add_to(marker_cluster)
     m
+
 
 
 
