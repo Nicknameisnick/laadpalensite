@@ -46,7 +46,7 @@ with tab3:
             location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
             popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
         ).add_to(marker_cluster)
-    m
+
 
 
 
