@@ -34,7 +34,6 @@ tab1, tab2, tab3 = st.tabs([
    "Laadpalen map"
 ])
 
-# Tab 1: Voertuigverdeling
 with tab1:
     # Existing auto_per_maand plot
     data_cars = pd.read_pickle('cars.pkl')
@@ -116,11 +115,11 @@ with tab1:
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof](https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
 
-
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
