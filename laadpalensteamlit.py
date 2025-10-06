@@ -45,9 +45,7 @@ def load_data():
     return laadpalen_gdf
 
 
-@st.cache_resource
-def build_map():
-    laadpalen_gdf = load_data()
+def build_map(laadpalen_gdf):
     m = folium.Map(location=[52.1, 5.3], zoom_start=8)
     marker_cluster = MarkerCluster().add_to(m)
 
@@ -77,5 +75,11 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 with tab3:
-    m = build_map()
+    # Load data once (cached)
+    laadpalen_gdf = load_data()
+
+    # Build map (not cached, so it always renders properly in Streamlit)
+    m = build_map(laadpalen_gdf)
+
+    # Render interactive map
     st_folium(m, width=800, height=600)
