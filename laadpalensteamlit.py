@@ -2,8 +2,6 @@ import requests
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
-import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point
 import folium
@@ -34,13 +32,6 @@ Laadpalen.drop(columns_to_drop, axis=1, inplace=True)
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
-# -------------------------------
-# Sidebar Controls
-# -------------------------------
-st.sidebar.title("Controls")
-year_range = st.sidebar.slider("Select Year Range", 2010, 2025, (2010, 2025))
-show_lines = st.sidebar.checkbox("Show Lines", value=True)
-show_points = st.sidebar.checkbox("Show Points", value=True)
 
 # -------------------------------
 # Functions
@@ -127,6 +118,16 @@ def auto_per_maand(data_cars):
     with col2:
         st.plotly_chart(fig_hist, use_container_width=True)
 
+def build_map():
+    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
+    marker_cluster = MarkerCluster().add_to(m)
+    for _, row in Laadpalen1.iterrows():
+        folium.Marker(
+            location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
+            popup=row.get("AddressInfo.Title", "Charging Station")
+        ).add_to(marker_cluster)
+    return m
+
 # -------------------------------
 # Tabs
 # -------------------------------
@@ -144,12 +145,5 @@ with tab1:
 
 # Tab 3: Laadpalen map
 with tab3:
-    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
-    marker_cluster = MarkerCluster().add_to(m)
-    for _, row in Laadpalen1.iterrows():
-        folium.Marker(
-            location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
-            popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
-        ).add_to(marker_cluster)
-
-    st_folium(m, width=800, height=600)
+    m = build_map()  # build first
+    st_folium(m, width=800, height=600)  # render after
