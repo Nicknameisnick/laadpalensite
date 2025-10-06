@@ -34,9 +34,9 @@ show_lines = st.sidebar.checkbox("Show Lines", value=True)
 show_points = st.sidebar.checkbox("Show Points", value=True)
 
 tab1, tab2, tab3 = st.tabs([ 
-"Voertuigverdeling over de tijd", 
-"Oplaad data",
-"Laadpalen map"
+"🚗 Voertuigverdeling over de tijd", 
+"🔋 Oplaad data",
+"🗺️ Laadpalen map"
 ])
 with tab1:
    data_cars = pd.read_pickle('cars.pkl')
@@ -255,6 +255,7 @@ popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Stat
 
 # render map
 st_folium(m, width=800, height=600)
+
 
 
 
