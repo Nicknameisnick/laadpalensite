@@ -35,11 +35,6 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 with tab1:
-    # Existing auto_per_maand plot
-    data_cars = pd.read_pickle('cars.pkl')
-    data_cars['brandstof'] = data_cars['handelsbenaming'].apply(bepaal_brandstof)
-    auto_per_maand(data_cars)
-
     # -------------------------------
     # Personenautos CSV plot
     # -------------------------------
@@ -119,6 +114,7 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
