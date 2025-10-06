@@ -20,15 +20,6 @@ Laadpalen1 = Laadpalen.drop(columns_to_drop, axis=1, inplace=True)
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
-#map 
-m = folium.Map(location=[52.1, 5.3], zoom_start=8)
-marker_cluster = MarkerCluster().add_to(m)
-for _, row in Laadpalen1.iterrows():
-    folium.Marker(
-        location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
-        popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
-    ).add_to(marker_cluster)
-m
 
 #streamlit
 st.sidebar.title("Controls")
@@ -43,6 +34,16 @@ tab1, tab2, tab3 = st.tabs([
    "Oplaad data",
    "Laadpalen map"
 ])
+
+with tab3:
+    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
+    marker_cluster = MarkerCluster().add_to(m)
+    for _, row in Laadpalen1.iterrows():
+        folium.Marker(
+            location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
+            popup=row["AddressInfo.Title"] if "AddressInfo.Title" in row else "Charging Station"
+        ).add_to(marker_cluster)
+    m
 
 
 
