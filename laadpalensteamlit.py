@@ -32,7 +32,6 @@ Laadpalen.drop(columns_to_drop, axis=1, inplace=True)
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
-
 # -------------------------------
 # Functions
 # -------------------------------
@@ -59,8 +58,14 @@ def auto_per_maand(data_cars):
     grouped_data = data_cars.groupby(['datum_eerste_toelating', 'brandstof']).size().unstack(fill_value=0)
     grouped_data = grouped_data.reset_index()
 
-    if 'elektrisch' in grouped_data and 'benzine' in grouped_data:
-        grouped_data[['elektrisch', 'benzine']] = grouped_data[['elektrisch', 'benzine']].cumsum()
+    # Zorg dat alle brandstoffen aanwezig zijn
+    for col in ['elektrisch', 'hybride', 'benzine', 'diesel', 'waterstof']:
+        if col not in grouped_data.columns:
+            grouped_data[col] = 0
+
+    grouped_data[['elektrisch', 'hybride', 'benzine', 'diesel', 'waterstof']] = grouped_data[
+        ['elektrisch', 'hybride', 'benzine', 'diesel', 'waterstof']
+    ].cumsum()
 
     melted_data = grouped_data.melt(id_vars='datum_eerste_toelating', var_name='brandstof', value_name='aantal_autos')
 
@@ -77,8 +82,19 @@ def auto_per_maand(data_cars):
     )
 
     # Filteren op slider
-    filtered_data = melted_data[(melted_data['datum_eerste_toelating'] >= selected_date[0]) &
-                                (melted_data['datum_eerste_toelating'] <= selected_date[1])]
+    filtered_data = melted_data[
+        (melted_data['datum_eerste_toelating'] >= selected_date[0]) &
+        (melted_data['datum_eerste_toelating'] <= selected_date[1])
+    ]
+
+    # Kleuren instellen
+    color_map = {
+        'elektrisch': 'yellow',
+        'hybride': 'green',
+        'benzine': 'darkblue',
+        'diesel': 'saddlebrown',
+        'waterstof': 'blue'
+    }
 
     # Lijngrafiek
     fig_line = px.line(
@@ -86,16 +102,17 @@ def auto_per_maand(data_cars):
         x='datum_eerste_toelating',
         y='aantal_autos',
         color='brandstof',
-        color_discrete_map={'benzine': 'blue', 'elektrisch': 'red'},
+        color_discrete_map=color_map,
         labels={'aantal_autos': 'Aantal auto\'s', 'datum_eerste_toelating': 'Datum eerste toelating'},
         title=f'Cumulatief aantal auto\'s per brandstofsoort van {selected_date[0].strftime("%Y-%m")} tot {selected_date[1].strftime("%Y-%m")}'
     )
 
     # Histogram
-    color_map = {'benzine': 'blue', 'elektrisch': 'red'}
-    filtered_hist_data = data_cars[(data_cars['brandstof'].isin(color_map.keys())) &
-                                   (data_cars['datum_eerste_toelating'] >= selected_date[0]) &
-                                   (data_cars['datum_eerste_toelating'] <= selected_date[1])]
+    filtered_hist_data = data_cars[
+        (data_cars['brandstof'].isin(color_map.keys())) &
+        (data_cars['datum_eerste_toelating'] >= selected_date[0]) &
+        (data_cars['datum_eerste_toelating'] <= selected_date[1])
+    ]
 
     fig_hist = px.histogram(
         filtered_hist_data,
@@ -111,12 +128,9 @@ def auto_per_maand(data_cars):
     max_count = data_cars['brandstof'].value_counts().max()
     fig_hist.update_yaxes(range=[0, max_count])
 
-    # Twee kolommen met de grafieken
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(fig_line, use_container_width=True)
-    with col2:
-        st.plotly_chart(fig_hist, use_container_width=True)
+    # Grafieken onder elkaar
+    st.plotly_chart(fig_line, use_container_width=True)
+    st.plotly_chart(fig_hist, use_container_width=True)
 
 def build_map():
     m = folium.Map(location=[52.1, 5.3], zoom_start=8)
@@ -145,5 +159,5 @@ with tab1:
 
 # Tab 3: Laadpalen map
 with tab3:
-    m = build_map()  # build first
-    st_folium(m, width=800, height=600)  # render after
+    m = build_map()
+    st_folium(m, width=800, height=600)
