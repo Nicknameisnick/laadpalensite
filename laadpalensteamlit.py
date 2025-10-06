@@ -136,12 +136,15 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
-
+st.markdown(
+    "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof](https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+)
 
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
