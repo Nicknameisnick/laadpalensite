@@ -24,10 +24,6 @@ tab1, tab2, tab3 = st.tabs([
 with tab1:
 
 
-with tab2:
-
-
-with tab3:
 
 
 
