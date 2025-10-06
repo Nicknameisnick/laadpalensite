@@ -10,7 +10,7 @@ from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
-laadpalen = pd.read_csv('laadpalen_api_data.csv')
+Laadpalen = pd.read_csv('laadpalen_api_data.csv')
 
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
@@ -121,6 +121,7 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
