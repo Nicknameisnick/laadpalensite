@@ -21,7 +21,8 @@ tab1, tab2, tab3 = st.tabs([
    "Oplaad data",
    "Laadpalen map"
 ])
-with tab1:
+
+
 
 
 
