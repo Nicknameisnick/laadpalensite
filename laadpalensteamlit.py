@@ -53,97 +53,92 @@ tab1, tab2, tab3 = st.tabs([
 
 # Tab 1: Voertuigverdeling
 with tab1:
-    
-# Load the dataset (skip the fake header row)
-df = pd.read_csv("personenautos_csb.csv", sep=";", header=None, skiprows=[0])
+    # Existing auto_per_maand plot
+    data_cars = pd.read_pickle('cars.pkl')
+    data_cars['brandstof'] = data_cars['handelsbenaming'].apply(bepaal_brandstof)
+    auto_per_maand(data_cars)
 
-# The first valid data row contains the column names, so we extract them:
-columns = df.iloc[0].tolist()
-df.columns = columns
-df = df[1:]  # Remove the row with the column names
+    # -------------------------------
+    # Personenautos CSV plot
+    # -------------------------------
+    df = pd.read_csv("personenautos_csb.csv", sep=";", header=None, skiprows=[0])
+    # rest of the code must also be indented under this 'with' block
+    columns = df.iloc[0].tolist()
+    df.columns = columns
+    df = df[1:]
+    df = df[['Wegvoertuigen', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
+    df.rename(columns={
+        'Wegvoertuigen': 'kwartaal',
+        'Full elektric (BEV)': 'elektrisch',
+        'Totaal hybrides': 'hybride'
+    }, inplace=True)
 
-# Keep only relevant columns
-df = df[['Wegvoertuigen', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
+    for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
-# Rename columns for clarity
-df.rename(columns={
-    'Wegvoertuigen': 'kwartaal',
-    'Full elektric (BEV)': 'elektrisch',
-    'Totaal hybrides': 'hybride'
-}, inplace=True)
+    def parse_quarter(q):
+        try:
+            year, quarter = q.split()
+            q_num = int(quarter[0])
+            month = (q_num - 1) * 3 + 1
+            return pd.Timestamp(year=int(year), month=month, day=1)
+        except:
+            return pd.NaT
 
-# Convert numeric columns to numbers
-for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
-    df[col] = pd.to_numeric(df[col], errors='coerce')
+    df['datum'] = df['kwartaal'].apply(parse_quarter)
+    df = df.dropna(subset=['datum'])
 
-# Convert 'kwartaal' like "2007 1e kwartaal" → datetime (using first month of quarter)
-def parse_quarter(q):
-    try:
-        year, quarter = q.split()
-        q_num = int(quarter[0])  # e.g., '1e' → 1
-        month = (q_num - 1) * 3 + 1
-        return pd.Timestamp(year=int(year), month=month, day=1)
-    except:
-        return pd.NaT
+    melted = df.melt(id_vars='datum', value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
+                     var_name='brandstof', value_name='aantal')
+    melted = melted.sort_values('datum')
 
-df['datum'] = df['kwartaal'].apply(parse_quarter)
-df = df.dropna(subset=['datum'])
+    color_map = {
+        'elektrisch': 'yellow',
+        'hybride': 'green',
+        'Benzine': 'darkblue',
+        'Diesel': 'saddlebrown'
+    }
 
-# Melt the DataFrame for Plotly
-melted = df.melt(id_vars='datum', value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
-                 var_name='brandstof', value_name='aantal')
+    min_date = melted['datum'].min().to_pydatetime()
+    max_date = melted['datum'].max().to_pydatetime()
 
-# Sort by date
-melted = melted.sort_values('datum')
+    selected_date = st.slider(
+        "Selecteer periode (kwartaal personenauto's)",
+        min_value=min_date,
+        max_value=max_date,
+        value=(min_date, max_date),
+        format="YYYY-MM"
+    )
 
-# Define color map
-color_map = {
-    'elektrisch': 'yellow',
-    'hybride': 'green',
-    'Benzine': 'darkblue',
-    'Diesel': 'saddlebrown'
-}
+    filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
 
-# Slider limits
-min_date = melted['datum'].min().to_pydatetime()
-max_date = melted['datum'].max().to_pydatetime()
+    fig = px.line(
+        filtered,
+        x='datum',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
+    )
 
-selected_date = st.slider(
-    "Selecteer periode (kwartaal)",
-    min_value=min_date,
-    max_value=max_date,
-    value=(min_date, max_date),
-    format="YYYY-MM"
-)
+    fig.update_layout(
+        xaxis_title="Kwartaal",
+        yaxis_title="Aantal auto's",
+        hovermode="x unified"
+    )
 
-# Filter data
-filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
+    st.plotly_chart(fig, use_container_width=True)
 
-# Plot
-fig = px.line(
-    filtered,
-    x='datum',
-    y='aantal',
-    color='brandstof',
-    color_discrete_map=color_map,
-    title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
-)
+    st.markdown(
+        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof](https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+    )
 
-fig.update_layout(
-    xaxis_title="Kwartaal",
-    yaxis_title="Aantal auto's",
-    hovermode="x unified"
-)
-
-st.plotly_chart(fig, use_container_width=True)
-st.markdown(
-    "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof](https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
-)
 
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
