@@ -11,4 +11,5 @@ streamlit_folium
 streamlit_option_menu
 geopandas
 shapely.geometry
-folium.plugins
+
+
