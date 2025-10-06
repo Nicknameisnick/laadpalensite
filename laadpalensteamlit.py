@@ -135,10 +135,6 @@ with tab1:
 
 # Tab 3: Laadpalen map
 with tab3:
-    test_map = folium.Map(location=[52.1, 5.3], zoom_start=8)
-    folium.Marker([52.1, 5.3], popup="Test marker").add_to(test_map)
-    st_folium(test_map, width=800, height=600)
-    ''' 
     m = folium.Map(location=[52.1, 5.3], zoom_start=8)
     marker_cluster = MarkerCluster().add_to(m)
     for _, row in Laadpalen1.iterrows():
@@ -147,6 +143,7 @@ with tab3:
             popup=row.get("AddressInfo.Title", "Charging Station")
         ).add_to(marker_cluster)
     st_folium(m, width=800, height=600)  # render after
+
 
 
 
