@@ -143,6 +143,9 @@ with tab3:
             popup=row.get("AddressInfo.Title", "Charging Station")
         ).add_to(marker_cluster)
     st_folium(m, width=800, height=600)  # render after
+    st.write("Laadpalen shape:", Laadpalen1.shape)
+
+
 
 
 
