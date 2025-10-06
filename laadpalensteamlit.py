@@ -53,76 +53,94 @@ tab1, tab2, tab3 = st.tabs([
 
 # Tab 1: Voertuigverdeling
 with tab1:
-    # -------------------------------
-    # Nieuwe grafiek: ontwikkeling brandstof per jaar (2015–2025)
-    # -------------------------------
 
-    # Laad de data
-    brandstof_per_year = pd.read_csv("brandstof_per_year.csv", index_col=0)
+# Load the dataset (skip the fake header row)
+df = pd.read_csv("personenautos_csb.csv", sep=";", header=None, skiprows=[0])
 
-    # Zorg dat index numeriek is (jaren)
-    brandstof_per_year.index = brandstof_per_year.index.astype(int)
+# The first valid data row contains the column names, so we extract them:
+columns = df.iloc[0].tolist()
+df.columns = columns
+df = df[1:]  # Remove the row with the column names
 
-    # Smelt de data voor Plotly
-    df_long = brandstof_per_year.reset_index().melt(
-        id_vars="index", var_name="Brandstof", value_name="Aantal"
-    )
-    df_long.rename(columns={"index": "Jaar"}, inplace=True)
+# Keep only relevant columns
+df = df[['Wegvoertuigen', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
 
-    # Zet het type van Jaar naar int
-    df_long["Jaar"] = df_long["Jaar"].astype(int)
+# Rename columns for clarity
+df.rename(columns={
+    'Wegvoertuigen': 'kwartaal',
+    'Full elektric (BEV)': 'elektrisch',
+    'Totaal hybrides': 'hybride'
+}, inplace=True)
 
-    # Voeg een slider toe om jaarrange te kiezen
-    min_year, max_year = int(df_long["Jaar"].min()), int(df_long["Jaar"].max())
-    selected_years = st.slider(
-        "Selecteer periode (jaar)",
-        min_value=min_year,
-        max_value=max_year,
-        value=(min_year, max_year),
-        step=1
-    )
+# Convert numeric columns to numbers
+for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # Filter data op geselecteerde jaren
-    df_filtered = df_long[
-        (df_long["Jaar"] >= selected_years[0]) &
-        (df_long["Jaar"] <= selected_years[1])
-    ]
+# Convert 'kwartaal' like "2007 1e kwartaal" → datetime (using first month of quarter)
+def parse_quarter(q):
+    try:
+        year, quarter = q.split()
+        q_num = int(quarter[0])  # e.g., '1e' → 1
+        month = (q_num - 1) * 3 + 1
+        return pd.Timestamp(year=int(year), month=month, day=1)
+    except:
+        return pd.NaT
 
-    # Kleurenschema instellen
-    color_map = {
-        'elektrisch': 'yellow',
-        'hybride': 'green',
-        'benzine': 'darkblue',
-        'diesel': 'saddlebrown',
-        'waterstof': 'blue'
-    }
+df['datum'] = df['kwartaal'].apply(parse_quarter)
+df = df.dropna(subset=['datum'])
 
-    # Plotly line chart
-    fig_trend = px.line(
-        df_filtered,
-        x="Jaar",
-        y="Aantal",
-        color="Brandstof",
-        markers=True,
-        color_discrete_map=color_map,
-        title=f"Ontwikkeling aantal voertuigen per brandstofsoort ({selected_years[0]}–{selected_years[1]})"
-    )
+# Melt the DataFrame for Plotly
+melted = df.melt(id_vars='datum', value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
+                 var_name='brandstof', value_name='aantal')
 
-    fig_trend.update_layout(
-        xaxis_title="Jaar",
-        yaxis_title="Aantal voertuigen",
-        hovermode="x unified",
-        legend_title="Brandstof",
-        template="plotly_white"
-    )
+# Sort by date
+melted = melted.sort_values('datum')
 
-    # Toon grafiek
-    st.plotly_chart(fig_trend, use_container_width=True)
-   
+# Define color map
+color_map = {
+    'elektrisch': 'yellow',
+    'hybride': 'green',
+    'Benzine': 'darkblue',
+    'Diesel': 'saddlebrown'
+}
+
+# Slider limits
+min_date = melted['datum'].min().to_pydatetime()
+max_date = melted['datum'].max().to_pydatetime()
+
+selected_date = st.slider(
+    "Selecteer periode (kwartaal)",
+    min_value=min_date,
+    max_value=max_date,
+    value=(min_date, max_date),
+    format="YYYY-MM"
+)
+
+# Filter data
+filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
+
+# Plot
+fig = px.line(
+    filtered,
+    x='datum',
+    y='aantal',
+    color='brandstof',
+    color_discrete_map=color_map,
+    title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
+)
+
+fig.update_layout(
+    xaxis_title="Kwartaal",
+    yaxis_title="Aantal auto's",
+    hovermode="x unified"
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
