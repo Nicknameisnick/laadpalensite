@@ -1,3 +1,4 @@
+
 import requests
 import pandas as pd
 import streamlit as st
@@ -31,30 +32,19 @@ st.markdown(
     /* Rounded container look for charts */
     .chart-container {
         background-color: #1e222b;
-        padding: 24px;
+        padding: 20px;
         border-radius: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
-    /* Increase overall font size 1.2x */
-    html, body, [class*="st-"] {
-        font-size: 1.2em !important;
     }
 
     /* Tabs text color */
     .stTabs [role="tab"] {
         color: white !important;
-        font-size: 1.2em !important;
     }
     .stTabs [role="tab"][aria-selected="true"] {
         color: #00c0ff !important;
         font-weight: bold;
-    }
-
-    /* Slider label and multiselect text */
-    label, .stSlider, .stMultiSelect {
-        font-size: 1.2em !important;
     }
     </style>
     """,
@@ -191,10 +181,10 @@ with tab1:
     fig.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white', size=16),
-        legend=dict(font=dict(color='white', size=14)),
-        xaxis=dict(title_font=dict(color='white', size=14), tickfont=dict(color='white', size=13)),
-        yaxis=dict(title_font=dict(color='white', size=14), tickfont=dict(color='white', size=13)),
+        font=dict(color='white'),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified'
     )
 
@@ -226,16 +216,16 @@ with tab1:
         width=800,
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white', size=16),
-        legend=dict(font=dict(color='white', size=14)),
+        font=dict(color='white'),
+        legend=dict(font=dict(color='white')),
         xaxis=dict(
-            title_font=dict(color='white', size=14),
-            tickfont=dict(color='white', size=13),
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
             type='category',
             categoryorder='array',
             categoryarray=totalen['brandstof'].tolist()
         ),
-        yaxis=dict(title_font=dict(color='white', size=14), tickfont=dict(color='white', size=13)),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         bargap=0.2,
         height=350
     )
