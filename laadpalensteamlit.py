@@ -36,7 +36,7 @@ tab1, tab2, tab3 = st.tabs([
 
 with tab1:
     # Lees CSV in
-    df_raw = pd.read_csv("personenautos_csb.csv", sep=";")
+    df_raw = pd.read_csv("personenautos_csb.csv")
 
     # De echte kolomnamen staan in de tweede rij (index 0 in je voorbeeld)
     df = df_raw.copy()
@@ -132,6 +132,7 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
