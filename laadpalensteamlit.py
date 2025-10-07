@@ -164,8 +164,7 @@ with tab1:
         y='aantal',
         color='brandstof',
         color_discrete_map=color_map,
-        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)",
-        opacity=0.6  # lichte transparantie
+        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
 
     fig.update_layout(
@@ -187,8 +186,7 @@ with tab1:
         y='aantal',
         color='brandstof',
         color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
-        opacity=0.6
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)"
     )
 
     bar_fig.update_layout(
@@ -213,3 +211,4 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
