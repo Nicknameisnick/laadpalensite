@@ -227,10 +227,12 @@ with tab1:
             tickfont=dict(color='white'),
             type='category',
             categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist()
+            categoryarray=totalen['brandstof'].tolist(),
+            tickmode='array'
         ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         bargap=0.2,
+        bargroupgap=0,
         height=350
     )
 
@@ -248,5 +250,5 @@ with tab1:
 with tab3:
     st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
     m = build_map()
-    st_folium(m, width=1700, height=750)
+    st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
