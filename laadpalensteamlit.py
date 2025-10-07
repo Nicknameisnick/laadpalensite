@@ -9,6 +9,11 @@ from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
 # -----------------------------
+# Page config MUST be first
+# -----------------------------
+st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
+
+# -----------------------------
 # Custom background and logo
 # -----------------------------
 st.markdown(
@@ -42,8 +47,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
 # ===============================
 # Laadpalen Data en Map
@@ -154,25 +157,28 @@ with tab1:
 
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
-    # Lijnplot
+    # Lijnplot met lichte transparantie
     fig = px.line(
         filtered,
         x='datum',
         y='aantal',
         color='brandstof',
         color_discrete_map=color_map,
-        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
+        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)",
+        opacity=0.6  # lichte transparantie
     )
 
     fig.update_layout(
         xaxis_title="Kwartaal",
         yaxis_title="Aantal auto's",
-        hovermode="x unified"
+        hovermode="x unified",
+        plot_bgcolor='rgba(255,255,255,0.1)',  # transparante plot background
+        paper_bgcolor='rgba(0,0,0,0)'         # transparant papier
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 🔹 Bar chart met totaal per categorie in geselecteerde periode
+    # 🔹 Bar chart kleiner (1/3 van page height)
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
 
     bar_fig = px.bar(
@@ -181,12 +187,16 @@ with tab1:
         y='aantal',
         color='brandstof',
         color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)"
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+        opacity=0.6
     )
 
     bar_fig.update_layout(
         xaxis_title="Brandstofcategorie",
-        yaxis_title="Totaal aantal auto's"
+        yaxis_title="Totaal aantal auto's",
+        plot_bgcolor='rgba(255,255,255,0.1)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=400  # kleiner dan standaard
     )
 
     st.plotly_chart(bar_fig, use_container_width=True)
