@@ -185,12 +185,12 @@ with tab1:
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
     fig.update_layout(
-        plot_bgcolor='white',
-        paper_bgcolor='white',
+     plot_bgcolor='gray',
+        paper_bgcolor='gray',
         font=dict(color='black'),
-        legend=dict(font=dict(color='black')),
-        xaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black')),
-        yaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black')),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'), type='category'),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified'
     )
     st.plotly_chart(fig, use_container_width=True)
@@ -206,14 +206,14 @@ with tab1:
         title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
         text='aantal'
     )
-    bar_fig.update_traces(width=0.6, textposition='auto')
+    bar_fig.update_traces(width=0.6, textposition='inside')
     bar_fig.update_layout(
-        plot_bgcolor='white',
-        paper_bgcolor='white',
+        plot_bgcolor='gray',
+        paper_bgcolor='gray',
         font=dict(color='black'),
-        legend=dict(font=dict(color='black')),
-        xaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black'), type='category'),
-        yaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black'))
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'), type='category'),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
     )
     st.plotly_chart(bar_fig, use_container_width=True)
 
@@ -229,6 +229,7 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
