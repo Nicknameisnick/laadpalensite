@@ -8,11 +8,13 @@ import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
-st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
+# -----------------------------
+# Custom background and logo
+# -----------------------------
 st.markdown(
     """
     <style>
-    /* Set background image */
+    /* Background image */
     .stApp {
         background-image: url('https://i.pinimg.com/originals/2e/48/45/2e48453eb6bed89d50a954cd1de7aa07.jpg');
         background-size: cover;
@@ -20,7 +22,7 @@ st.markdown(
         background-attachment: fixed;
     }
 
-    /* Position logo at top right */
+    /* Top-right logo */
     .logo-container {
         position: fixed;
         top: 10px;
@@ -29,7 +31,7 @@ st.markdown(
     }
 
     .logo-container img {
-        width: 120px;  /* adjust size */
+        width: 120px;
         height: auto;
     }
     </style>
@@ -40,6 +42,9 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
+
 # ===============================
 # Laadpalen Data en Map
 # ===============================
@@ -73,13 +78,13 @@ with tab1:
     # Lees CSV in
     df_raw = pd.read_csv("personenautos_csb.csv")
 
-    # De echte kolomnamen staan in de tweede rij (index 0)
+    # De echte kolomnamen staan in de tweede rij
     df = df_raw.copy()
     new_cols = df.iloc[0].tolist()
     df.columns = new_cols
     df = df.drop(index=0).reset_index(drop=True)
 
-    # Hou alleen de relevante kolommen
+    # Hou alleen relevante kolommen
     df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
 
     # Hernoem kolommen
@@ -192,11 +197,9 @@ with tab1:
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
 
-
 # ===============================
 # TAB 3: Laadpalen map
 # ===============================
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
-
