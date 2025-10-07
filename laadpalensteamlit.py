@@ -25,7 +25,7 @@ st.markdown(
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: black; /* make text black */
+        color: black !important;
     }
 
     /* Top-right logo */
@@ -40,7 +40,13 @@ st.markdown(
         width: 120px;
         height: auto;
     }
+
+    /* Page-wide text black */
+    .stApp, .stTabs [role='tab'], .css-1v3fvcr, .css-1kyxreq {
+        color: black !important;
+    }
     </style>
+
     <div class="logo-container">
         <img src="https://zakelijkschrijven.nl/wp-content/uploads/2021/01/HvA-logo.png">
     </div>
@@ -122,7 +128,6 @@ with tab1:
         var_name='brandstof',
         value_name='aantal'
     )
-
     melted = melted.sort_values('datum')
 
     # Kleuren
@@ -147,14 +152,13 @@ with tab1:
 
     filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
 
-    # 🔹 Multi-select dropdown voor brandstofcategorieën
+    # Multi-select brandstof
     brandstof_opties = filtered['brandstof'].unique().tolist()
     selected_brandstoffen = st.multiselect(
         "Selecteer brandstoftypes om te tonen",
         options=brandstof_opties,
         default=brandstof_opties
     )
-
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
     # Lijnplot
@@ -166,50 +170,38 @@ with tab1:
         color_discrete_map=color_map,
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
-
     fig.update_layout(
-        xaxis_title="Kwartaal",
-        yaxis_title="Aantal auto's",
-        hovermode="x unified",
         plot_bgcolor='white',
         paper_bgcolor='white',
-        font=dict(color="black"),          # alle tekst zwart
-        legend=dict(
-            font=dict(color="black")
-        )
+        font=dict(color='black'),
+        legend=dict(font=dict(color='black')),
+        xaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black')),
+        yaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black')),
+        hovermode='x unified'
     )
-
     st.plotly_chart(fig, use_container_width=True)
 
-    # 🔹 Bar chart
+    # Bar chart
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
-
     bar_fig = px.bar(
         totalen,
         x='brandstof',
         y='aantal',
         color='brandstof',
         color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)"
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+        text='aantal'
     )
-
-    bar_fig.update_traces(
-        width=0.5  # bredere bars
-    )
-
+    bar_fig.update_traces(width=0.6, textposition='auto')
     bar_fig.update_layout(
-        xaxis_title="Brandstofcategorie",
-        yaxis_title="Totaal aantal auto's",
         plot_bgcolor='white',
         paper_bgcolor='white',
-        font=dict(color="black"),  # alles zwart
-        legend=dict(font=dict(color="black")),
-        bargap=0.3,
-        barmode='group',
-        xaxis=dict(tickmode='array', tickvals=list(range(len(totalen))), ticktext=totalen['brandstof'])
+        font=dict(color='black'),
+        legend=dict(font=dict(color='black')),
+        xaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black'), type='category'),
+        yaxis=dict(title_font=dict(color='black'), tickfont=dict(color='black'))
     )
-
-    st.plotly_chart(bar_fig, use_container_width=False)
+    st.plotly_chart(bar_fig, use_container_width=True)
 
     # Bron
     st.markdown(
