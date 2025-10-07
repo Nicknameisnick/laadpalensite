@@ -14,60 +14,22 @@ from streamlit_folium import st_folium
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
 # -----------------------------
-# Custom background and logo
+# Custom background (no logo)
 # -----------------------------
 st.markdown(
     """
     <style>
-    /* Background image */
     .stApp {
         background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: black !important;
-    }
-
-    /* Top-right logo */
-    .logo-container {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        z-index: 9999;
-    }
-
-    .logo-container img {
-        width: 120px;
-        height: auto;
-    }
-
-    /* Page-wide text black */
-    .stApp, .stTabs [role='tab'], .css-1v3fvcr, .css-1kyxreq {
-        color: black !important;
     }
     </style>
-
-    <div class="logo-container">
-        <img src="https://zakelijkschrijven.nl/wp-content/uploads/2021/01/HvA-logo.png">
-    </div>
     """,
     unsafe_allow_html=True
 )
-response = requests.get("https://api.openchargemap.io/v3/poi/?output=json&countrycode=NL&maxresults=6000&compact=true&verbose=false&key=2960318e-86ae-49e0-82b1-3c8bc6790b41") 
-responsejson = response.json() 
-Laadpalen_api = pd.json_normalize(responsejson) 
-df4 = pd.json_normalize(Laadpalen_api.Connections) 
-df5 = pd.json_normalize(df4[0]) 
-Laadpalen_api = pd.concat([Laadpalen_api, df5], axis=1)
 
-columns_to_drop = [
-    "Amps", "Voltage", "AddressInfo.StateOrProvince", "NumberOfPoints", "UsageCost", "UUID", 
-    "DataProviderID", "Reference", "Connections", "AddressInfo.DistanceUnit", 
-    "AddressInfo.AddressLine2", "AddressInfo.ContactTelephone1", "AddressInfo.RelatedURL", 
-    "DataProvidersReference", "IsRecentlyVerified", "DataQualityLevel", "AddressInfo.CountryID", 
-    "SubmissionStatusTypeID"
-]
-Laadpalen_api.drop(columns_to_drop, axis=1, inplace=True)
 # ===============================
 # Laadpalen Data en Map
 # ===============================
@@ -76,7 +38,7 @@ geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen[
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
 def build_map():
-    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
+    m = folium.Map(location=[52.1, 5.3], zoom_start=7)
     marker_cluster = MarkerCluster().add_to(m)
     for _, row in Laadpalen1.iterrows():
         folium.Marker(
@@ -88,7 +50,7 @@ def build_map():
 # ===============================
 # Tabs
 # ===============================
-tab1, tab2, tab3 = st.tabs([ 
+tab1, tab2, tab3 = st.tabs([
    "Voertuigverdeling over de tijd", 
    "Oplaad data",
    "Laadpalen map"
@@ -185,17 +147,17 @@ with tab1:
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
     fig.update_layout(
-     plot_bgcolor='gray',
-        paper_bgcolor='gray',
-        font=dict(color='black'),
+        plot_bgcolor='#2f2f2f',
+        paper_bgcolor='#2f2f2f',
+        font=dict(color='white'),
         legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'), type='category'),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified'
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # Bar chart
+    # Bar chart (smaller and centered)
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
     bar_fig = px.bar(
         totalen,
@@ -206,14 +168,24 @@ with tab1:
         title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
         text='aantal'
     )
-    bar_fig.update_traces(width=0.6, textposition='inside')
+    bar_fig.update_traces(
+        width=0.8,  # slightly wider bars
+        textposition='auto',
+        offset=0  # keeps bars centered on their category labels
+    )
     bar_fig.update_layout(
-        plot_bgcolor='gray',
-        paper_bgcolor='gray',
-        font=dict(color='black'),
+        plot_bgcolor='#2f2f2f',
+        paper_bgcolor='#2f2f2f',
+        font=dict(color='white'),
         legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'), type='category'),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            type='category',
+            tickmode='linear'
+        ),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        height=350  # smaller bar chart
     )
     st.plotly_chart(bar_fig, use_container_width=True)
 
@@ -228,9 +200,4 @@ with tab1:
 # ===============================
 with tab3:
     m = build_map()
-    st_folium(m, width=800, height=600)
-
-
-
-
-
+    st_folium(m, width=1200, height=800)  # bigger map
