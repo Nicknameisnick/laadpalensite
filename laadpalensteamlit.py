@@ -157,7 +157,7 @@ with tab1:
 
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
-    # Lijnplot met vaste achtergrond
+    # Lijnplot
     fig = px.line(
         filtered,
         x='datum',
@@ -171,13 +171,16 @@ with tab1:
         xaxis_title="Kwartaal",
         yaxis_title="Aantal auto's",
         hovermode="x unified",
-        plot_bgcolor='white',  # vaste achtergrond
-        paper_bgcolor='white'
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(
+            font=dict(color="black")  # zwarte legend tekst
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 🔹 Bar chart met vaste achtergrond en bredere weergave
+    # 🔹 Bar chart met bredere bars
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
 
     bar_fig = px.bar(
@@ -189,13 +192,20 @@ with tab1:
         title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)"
     )
 
+    bar_fig.update_traces(
+        width=0.6  # bredere bars
+    )
+
     bar_fig.update_layout(
         xaxis_title="Brandstofcategorie",
         yaxis_title="Totaal aantal auto's",
         plot_bgcolor='white',
         paper_bgcolor='white',
-        height=400,
-        width=700  # bredere weergave
+        legend=dict(
+            font=dict(color="black")
+        ),
+        bargap=0.2,  # ruimte tussen bars
+        xaxis=dict(tickmode='linear')  # center bars over labels
     )
 
     st.plotly_chart(bar_fig, use_container_width=False)
