@@ -35,47 +35,62 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 with tab1:
-    # -------------------------------
-    # Personenautos CSV plot
-    # -------------------------------
-    df = pd.read_csv("personenautos_csb.csv", sep=";", header=None, skiprows=[0])
-    # rest of the code must also be indented under this 'with' block
-    columns = df.iloc[0].tolist()
-    df.columns = columns
-    df = df[1:]
-    df = df[['Wegvoertuigen', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
+    # Lees CSV in
+    df_raw = pd.read_csv("personenautos_csb.csv", sep=";")
+
+    # De echte kolomnamen staan in de tweede rij (index 0 in je voorbeeld)
+    df = df_raw.copy()
+    new_cols = df.iloc[0].tolist()
+    df.columns = new_cols
+    df = df.drop(index=0).reset_index(drop=True)
+
+    # Hou alleen de relevante kolommen
+    df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
+
+    # Hernoem kolommen naar duidelijkere namen
     df.rename(columns={
-        'Wegvoertuigen': 'kwartaal',
+        'Brandstofsoort voertuig': 'kwartaal',
         'Full elektric (BEV)': 'elektrisch',
         'Totaal hybrides': 'hybride'
     }, inplace=True)
 
+    # Zet getallen om naar numeriek
     for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
+    # Converteer kwartaal naar datum
     def parse_quarter(q):
         try:
-            year, quarter = q.split()
-            q_num = int(quarter[0])
+            year_part, q_part = q.split()[:2]
+            year = int(year_part)
+            q_num = int(q_part[0])
             month = (q_num - 1) * 3 + 1
-            return pd.Timestamp(year=int(year), month=month, day=1)
-        except:
+            return pd.Timestamp(year=year, month=month, day=1)
+        except Exception:
             return pd.NaT
 
     df['datum'] = df['kwartaal'].apply(parse_quarter)
     df = df.dropna(subset=['datum'])
 
-    melted = df.melt(id_vars='datum', value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
-                     var_name='brandstof', value_name='aantal')
+    # Data omvormen voor plotting
+    melted = df.melt(
+        id_vars='datum',
+        value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
+        var_name='brandstof',
+        value_name='aantal'
+    )
+
     melted = melted.sort_values('datum')
 
+    # Kleuren voor consistentie
     color_map = {
-        'elektrisch': 'yellow',
-        'hybride': 'green',
         'Benzine': 'darkblue',
-        'Diesel': 'saddlebrown'
+        'Diesel': 'saddlebrown',
+        'elektrisch': 'yellow',
+        'hybride': 'green'
     }
 
+    # Slider voor tijdsselectie
     min_date = melted['datum'].min().to_pydatetime()
     max_date = melted['datum'].max().to_pydatetime()
 
@@ -89,6 +104,7 @@ with tab1:
 
     filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
 
+    # Plot met Plotly
     fig = px.line(
         filtered,
         x='datum',
@@ -107,13 +123,16 @@ with tab1:
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown(
-        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof](https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
+        "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
+
 
 # Tab 3: Laadpalen map
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
 
 
