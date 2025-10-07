@@ -243,6 +243,79 @@ with tab1:
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
+# ===============================
+# TAB 2: Laadpaal data
+# ===============================
+with tab2:
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
+    # Load data
+    df_lp = pd.read_csv('laadpaaldata.csv')
+    df_lp['Started'] = pd.to_datetime(df_lp['Started'])
+    df_lp['Ended'] = pd.to_datetime(df_lp['Ended'])
+
+    st.markdown("### MaxPower frequency")
+    maxpower_counts = df_lp['MaxPower'].value_counts().reset_index()
+    maxpower_counts.columns = ['MaxPower', 'Frequency']
+    fig_maxpower = px.bar(
+        maxpower_counts,
+        x='MaxPower',
+        y='Frequency',
+        title='Frequentie van MaxPower',
+        text='Frequency'
+    )
+    fig_maxpower.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white'),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+    )
+    st.plotly_chart(fig_maxpower, use_container_width=True)
+
+    # ---- Average occupancy per hour ----
+    st.markdown("### Gemiddelde bezetting per uur")
+    df_lp['Hour'] = df_lp['Started'].dt.hour
+    occupancy_per_hour = df_lp.groupby('Hour').apply(
+        lambda x: np.mean((x['Ended'] - x['Started']).dt.total_seconds()/3600)
+    ).reset_index()
+    occupancy_per_hour.columns = ['Hour', 'AvgOccupancyHours']
+
+    fig_occupancy = px.bar(
+        occupancy_per_hour,
+        x='Hour',
+        y='AvgOccupancyHours',
+        title='Gemiddelde bezetting per uur (uur) in uren',
+        text='AvgOccupancyHours'
+    )
+    fig_occupancy.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white'),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+    )
+    st.plotly_chart(fig_occupancy, use_container_width=True)
+
+    # ---- Comparison of ConnectedTime vs ChargeTime ----
+    st.markdown("### ConnectedTime vs ChargeTime")
+    fig_times = px.scatter(
+        df_lp,
+        x='ConnectedTime',
+        y='ChargeTime',
+        title='Vergelijking ConnectedTime vs ChargeTime',
+        labels={'ConnectedTime':'ConnectedTime (uren)', 'ChargeTime':'ChargeTime (uren)'}
+    )
+    fig_times.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white'),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+    )
+    st.plotly_chart(fig_times, use_container_width=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ===============================
 # TAB 3: Laadpalen map
@@ -252,4 +325,5 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
