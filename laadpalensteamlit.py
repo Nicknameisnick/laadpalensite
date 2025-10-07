@@ -179,7 +179,7 @@ with tab1:
 
     # Layout: fixed width 400px, dark gray background, white text
     bar_fig.update_layout(
-        width=400,
+        width=800,
         plot_bgcolor='#2f2f2f',
         paper_bgcolor='#2f2f2f',
         font=dict(color='white'),
@@ -211,4 +211,5 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=1200, height=800)  # bigger map
+
 
