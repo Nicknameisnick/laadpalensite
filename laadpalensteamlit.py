@@ -16,12 +16,12 @@ import numpy as np
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
 # -----------------------------
-# Custom dark theme & styling
+# Custom dark theme & styling (background + rounded containers)
 # -----------------------------
 st.markdown(
     """
     <style>
-   .stApp {
+    .stApp {
         background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
         background-size: cover;
         background-position: center;
@@ -51,13 +51,14 @@ st.markdown(
 )
 
 # ===============================
-# Laadpalen Data en Map
+# Laadpalen Data en Map (short file)
 # ===============================
 Laadpalen = pd.read_csv('laadpalen_kort.csv')
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
 def build_map():
+    # dark tiles for map
     m = folium.Map(location=[52.1, 5.3], zoom_start=8, tiles="CartoDB dark_matter")
     marker_cluster = MarkerCluster().add_to(m)
     for _, row in Laadpalen1.iterrows():
@@ -66,6 +67,46 @@ def build_map():
             popup=row.get("AddressInfo.Title", "Charging Station")
         ).add_to(marker_cluster)
     return m
+
+# -------------------------------
+# Helper: format p-value robustly
+# -------------------------------
+def format_pvalue(pval_from_linreg, t_stat, df):
+    """
+    Return a human-readable p-value string.
+    If linregress p is usable (>0) we format it.
+    Otherwise try t-dist; if that underflows produce a safe '<1eXXX' bound.
+    """
+    # Prefer direct p from linregress if >0
+    if pval_from_linreg is not None and pval_from_linreg > 0:
+        if pval_from_linreg >= 1e-4:
+            return f"{pval_from_linreg:.4f}"
+        else:
+            return f"{pval_from_linreg:.2e}"
+
+    # Next try t-distribution using t_stat and df
+    if np.isfinite(t_stat) and df > 0:
+        p_t = 2.0 * stats.t.sf(abs(t_stat), df)
+        if p_t > 0:
+            if p_t >= 1e-4:
+                return f"{p_t:.4f}"
+            else:
+                return f"{p_t:.2e}"
+
+        # else p_t underflowed to zero; fall through to asymptotic approx
+
+    # Asymptotic normal tail approximation for extreme z = |t_stat|
+    if (np.isfinite(t_stat)):
+        z = abs(t_stat)
+        # if z is tiny/zero -> bail out
+        if z < 1e-8:
+            return "p=nan"
+        # log p approx: ln p ≈ -z^2/2 - ln(z) - 0.5 ln(2π)
+        ln_p = - (z**2) / 2.0 - np.log(z) - 0.5 * np.log(2.0 * np.pi)
+        log10_p = ln_p / np.log(10.0)
+        expo = int(np.floor(log10_p))
+        return f"<1e{expo}"
+    return "p=nan"
 
 # ===============================
 # Tabs
@@ -82,14 +123,15 @@ tab1, tab2, tab3 = st.tabs([
 with tab1:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
-    # Lees CSV in
+    # read file and fix header-in-data
     df_raw = pd.read_csv("personenautos_csb.csv")
     df = df_raw.copy()
     new_cols = df.iloc[0].tolist()
     df.columns = new_cols
     df = df.drop(index=0).reset_index(drop=True)
-    df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
 
+    # keep relevant cols and rename
+    df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
     df.rename(columns={
         'Brandstofsoort voertuig': 'kwartaal',
         'Full elektric (BEV)': 'elektrisch',
@@ -120,6 +162,7 @@ with tab1:
     )
     melted = melted.sort_values('datum')
 
+    # color map (bright on dark)
     color_map = {
         'Benzine': 'dodgerblue',
         'Diesel': 'saddlebrown',
@@ -127,7 +170,7 @@ with tab1:
         'hybride': 'limegreen'
     }
 
-    # Date filter
+    # date slider & filtering
     min_date = melted['datum'].min().to_pydatetime()
     max_date = melted['datum'].max().to_pydatetime()
 
@@ -146,103 +189,4 @@ with tab1:
         options=brandstof_opties,
         default=brandstof_opties
     )
-    filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
-
-    # Buttons for regression lines
-    show_reg_benzine = st.toggle("Toon regressielijn Benzine", value=False)
-    show_reg_elektrisch = st.toggle("Toon regressielijn Elektrisch", value=False)
-
-    fig = px.line(
-        filtered,
-        x='datum',
-        y='aantal',
-        color='brandstof',
-        color_discrete_map=color_map,
-        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
-    )
-
-    # Add regressions for Benzine and Elektrisch
-    for brand in ['Benzine', 'elektrisch']:
-        if (brand == 'Benzine' and show_reg_benzine) or (brand == 'elektrisch' and show_reg_elektrisch):
-            data = filtered[filtered['brandstof'] == brand]
-            x = np.arange(len(data))
-            y = data['aantal'].values
-            slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
-            line = intercept + slope * x
-            fig.add_scatter(
-                x=data['datum'],
-                y=line,
-                mode='lines',
-                name=f"Regressie {brand} (p={p_value:.3f}, r={r_value:.3f})",
-                line=dict(color=color_map[brand], dash='dot')
-            )
-
-    fig.update_layout(
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white'),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        hovermode='x unified'
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ---- Bar chart ----
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-
-    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
-    bar_fig = px.bar(
-        totalen,
-        x='brandstof',
-        y='aantal',
-        color='brandstof',
-        color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
-        text='aantal'
-    )
-
-    bar_fig.update_traces(
-        width=0.6,
-        textposition='auto',
-        offsetgroup=None,
-        alignmentgroup=None
-    )
-
-    bar_fig.update_layout(
-        width=800,
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white'),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            type='category',
-            categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist()
-        ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        bargap=0.2,
-        height=350
-    )
-
-    st.plotly_chart(bar_fig, use_container_width=False)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
-        "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
-    )
-
-# ===============================
-# TAB 3: Laadpalen map
-# ===============================
-with tab3:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    m = build_map()
-    st_folium(m, width=1000, height=750)
-    st.markdown('</div>', unsafe_allow_html=True)
-
+    filtered = filtered[filtered['brandst]()]()
