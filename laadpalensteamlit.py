@@ -9,7 +9,37 @@ from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
+st.markdown(
+    """
+    <style>
+    /* Set background image */
+    .stApp {
+        background-image: url('https://i.pinimg.com/originals/2e/48/45/2e48453eb6bed89d50a954cd1de7aa07.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
 
+    /* Position logo at top right */
+    .logo-container {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+    }
+
+    .logo-container img {
+        width: 120px;  /* adjust size */
+        height: auto;
+    }
+    </style>
+
+    <div class="logo-container">
+        <img src="https://zakelijkschrijven.nl/wp-content/uploads/2021/01/HvA-logo.png">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 # ===============================
 # Laadpalen Data en Map
 # ===============================
@@ -169,3 +199,4 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
