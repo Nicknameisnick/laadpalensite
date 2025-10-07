@@ -157,7 +157,7 @@ with tab1:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # Bar chart (smaller and centered)
+        # Bar chart (smaller and properly centered)
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
     bar_fig = px.bar(
         totalen,
@@ -168,12 +168,18 @@ with tab1:
         title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
         text='aantal'
     )
+
+    # Adjust bar width and centering
     bar_fig.update_traces(
-        width=0.8,  # slightly wider bars
+        width=0.6,               # makes bars slightly thinner for visual balance
         textposition='auto',
-        offset=0  # keeps bars centered on their category labels
+        offsetgroup=None,        # ensures single-group centering
+        alignmentgroup=None
     )
+
+    # Layout: fixed width 400px, dark gray background, white text
     bar_fig.update_layout(
+        width=400,
         plot_bgcolor='#2f2f2f',
         paper_bgcolor='#2f2f2f',
         font=dict(color='white'),
@@ -182,14 +188,18 @@ with tab1:
             title_font=dict(color='white'),
             tickfont=dict(color='white'),
             type='category',
-            tickmode='linear'
+            tickmode='linear',
+            categoryorder='array',
+            categoryarray=totalen['brandstof'].tolist(),  # ensure correct order
+            tickangle=0
         ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        height=350  # smaller bar chart
+        bargap=0.2,  # spacing between bars
+        height=350
     )
-    st.plotly_chart(bar_fig, use_container_width=True)
 
-    # Bron
+    st.plotly_chart(bar_fig, use_container_width=False)
+ # Bron
     st.markdown(
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
@@ -201,3 +211,4 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=1200, height=800)  # bigger map
+
