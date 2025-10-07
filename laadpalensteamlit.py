@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 # -----------------------------
 # Page config MUST be first
 # -----------------------------
-st.set_page_config(page_title="Laadpalen en Elektrische personenautos", layout="wide")
+st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
 # -----------------------------
 # Custom background and logo
@@ -25,6 +25,7 @@ st.markdown(
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
+        color: black; /* make text black */
     }
 
     /* Top-right logo */
@@ -40,7 +41,6 @@ st.markdown(
         height: auto;
     }
     </style>
-
     <div class="logo-container">
         <img src="https://zakelijkschrijven.nl/wp-content/uploads/2021/01/HvA-logo.png">
     </div>
@@ -173,14 +173,15 @@ with tab1:
         hovermode="x unified",
         plot_bgcolor='white',
         paper_bgcolor='white',
+        font=dict(color="black"),          # alle tekst zwart
         legend=dict(
-            font=dict(color="black")  # zwarte legend tekst
+            font=dict(color="black")
         )
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 🔹 Bar chart met bredere bars
+    # 🔹 Bar chart
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
 
     bar_fig = px.bar(
@@ -193,7 +194,7 @@ with tab1:
     )
 
     bar_fig.update_traces(
-        width=0.6  # bredere bars
+        width=0.5  # bredere bars
     )
 
     bar_fig.update_layout(
@@ -201,11 +202,11 @@ with tab1:
         yaxis_title="Totaal aantal auto's",
         plot_bgcolor='white',
         paper_bgcolor='white',
-        legend=dict(
-            font=dict(color="black")
-        ),
-        bargap=0.2,  # ruimte tussen bars
-        xaxis=dict(tickmode='linear')  # center bars over labels
+        font=dict(color="black"),  # alles zwart
+        legend=dict(font=dict(color="black")),
+        bargap=0.3,
+        barmode='group',
+        xaxis=dict(tickmode='array', tickvals=list(range(len(totalen))), ticktext=totalen['brandstof'])
     )
 
     st.plotly_chart(bar_fig, use_container_width=False)
