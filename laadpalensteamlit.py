@@ -21,7 +21,7 @@ st.markdown(
     <style>
     /* Background image */
     .stApp {
-        background-image: url('https://i.pinimg.com/originals/2e/48/45/2e48453eb6bed89d50a954cd1de7aa07.jpg');
+        background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -71,7 +71,7 @@ Laadpalen_api.drop(columns_to_drop, axis=1, inplace=True)
 # ===============================
 # Laadpalen Data en Map
 # ===============================
-Laadpalen = pd.read_csv('laadpalen_api_data.csv')
+Laadpalen = pd.read_csv('laadpalen_kort.csv')
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
@@ -229,4 +229,5 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
+
 
