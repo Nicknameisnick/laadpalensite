@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 # -----------------------------
 # Page config MUST be first
 # -----------------------------
-st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
+st.set_page_config(page_title="Laadpalen en Elektrische personenautos", layout="wide")
 
 # -----------------------------
 # Custom background and logo
@@ -157,7 +157,7 @@ with tab1:
 
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
-    # Lijnplot met lichte transparantie
+    # Lijnplot met vaste achtergrond
     fig = px.line(
         filtered,
         x='datum',
@@ -171,13 +171,13 @@ with tab1:
         xaxis_title="Kwartaal",
         yaxis_title="Aantal auto's",
         hovermode="x unified",
-        plot_bgcolor='rgba(255,255,255,0.1)',  # transparante plot background
-        paper_bgcolor='rgba(0,0,0,0)'         # transparant papier
+        plot_bgcolor='white',  # vaste achtergrond
+        paper_bgcolor='white'
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 🔹 Bar chart kleiner (1/3 van page height)
+    # 🔹 Bar chart met vaste achtergrond en bredere weergave
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
 
     bar_fig = px.bar(
@@ -192,12 +192,13 @@ with tab1:
     bar_fig.update_layout(
         xaxis_title="Brandstofcategorie",
         yaxis_title="Totaal aantal auto's",
-        plot_bgcolor='rgba(255,255,255,0.1)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        height=400  # kleiner dan standaard
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        height=400,
+        width=700  # bredere weergave
     )
 
-    st.plotly_chart(bar_fig, use_container_width=True)
+    st.plotly_chart(bar_fig, use_container_width=False)
 
     # Bron
     st.markdown(
@@ -211,4 +212,3 @@ with tab1:
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
-
