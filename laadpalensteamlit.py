@@ -10,8 +10,10 @@ from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
+# ===============================
+# Laadpalen Data en Map
+# ===============================
 Laadpalen = pd.read_csv('laadpalen_api_data.csv')
-
 geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
@@ -25,20 +27,23 @@ def build_map():
         ).add_to(marker_cluster)
     return m
 
-# -------------------------------
+# ===============================
 # Tabs
-# -------------------------------
+# ===============================
 tab1, tab2, tab3 = st.tabs([ 
    "Voertuigverdeling over de tijd", 
    "Oplaad data",
    "Laadpalen map"
 ])
 
+# ===============================
+# TAB 1: Personenauto’s per kwartaal
+# ===============================
 with tab1:
     # Lees CSV in
     df_raw = pd.read_csv("personenautos_csb.csv")
 
-    # De echte kolomnamen staan in de tweede rij (index 0 in je voorbeeld)
+    # De echte kolomnamen staan in de tweede rij (index 0)
     df = df_raw.copy()
     new_cols = df.iloc[0].tolist()
     df.columns = new_cols
@@ -47,7 +52,7 @@ with tab1:
     # Hou alleen de relevante kolommen
     df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
 
-    # Hernoem kolommen naar duidelijkere namen
+    # Hernoem kolommen
     df.rename(columns={
         'Brandstofsoort voertuig': 'kwartaal',
         'Full elektric (BEV)': 'elektrisch',
@@ -72,7 +77,7 @@ with tab1:
     df['datum'] = df['kwartaal'].apply(parse_quarter)
     df = df.dropna(subset=['datum'])
 
-    # Data omvormen voor plotting
+    # Data smelten
     melted = df.melt(
         id_vars='datum',
         value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
@@ -82,7 +87,7 @@ with tab1:
 
     melted = melted.sort_values('datum')
 
-    # Kleuren voor consistentie
+    # Kleuren
     color_map = {
         'Benzine': 'darkblue',
         'Diesel': 'saddlebrown',
@@ -90,7 +95,7 @@ with tab1:
         'hybride': 'green'
     }
 
-    # Slider voor tijdsselectie
+    # Slider
     min_date = melted['datum'].min().to_pydatetime()
     max_date = melted['datum'].max().to_pydatetime()
 
@@ -104,7 +109,17 @@ with tab1:
 
     filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
 
-    # Plot met Plotly
+    # 🔹 Multi-select dropdown voor brandstofcategorieën
+    brandstof_opties = filtered['brandstof'].unique().tolist()
+    selected_brandstoffen = st.multiselect(
+        "Selecteer brandstoftypes om te tonen",
+        options=brandstof_opties,
+        default=brandstof_opties
+    )
+
+    filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
+
+    # Lijnplot
     fig = px.line(
         filtered,
         x='datum',
@@ -122,26 +137,35 @@ with tab1:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # 🔹 Bar chart met totaal per categorie in geselecteerde periode
+    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
+
+    bar_fig = px.bar(
+        totalen,
+        x='brandstof',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)"
+    )
+
+    bar_fig.update_layout(
+        xaxis_title="Brandstofcategorie",
+        yaxis_title="Totaal aantal auto's"
+    )
+
+    st.plotly_chart(bar_fig, use_container_width=True)
+
+    # Bron
     st.markdown(
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
 
 
-# Tab 3: Laadpalen map
+# ===============================
+# TAB 3: Laadpalen map
+# ===============================
 with tab3:
     m = build_map()
     st_folium(m, width=800, height=600)
-
-
-
-
-
-
-
-
-
-
-
-
-
