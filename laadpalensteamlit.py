@@ -189,4 +189,123 @@ with tab1:
         options=brandstof_opties,
         default=brandstof_opties
     )
-    filtered = filtered[filtered['brandst]()]()
+    filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
+
+    # regression toggles (checkboxes)
+    show_reg_benzine = st.checkbox("Toon regressielijn Benzine", value=False)
+    show_reg_elektrisch = st.checkbox("Toon regressielijn Elektrisch", value=False)
+
+    # line plot
+    fig = px.line(
+        filtered,
+        x='datum',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
+    )
+
+    # add regression lines where requested
+    for brand in ['Benzine', 'elektrisch']:
+        if (brand == 'Benzine' and show_reg_benzine) or (brand == 'elektrisch' and show_reg_elektrisch):
+            data = filtered[filtered['brandstof'] == brand].copy().sort_values('datum')
+            if len(data) > 2:
+                # numeric x: days since first date (better numeric stability)
+                x_days = (data['datum'] - data['datum'].min()).dt.days.values.astype(float)
+                y = data['aantal'].values.astype(float)
+
+                # run linear regression
+                slope, intercept, r_value, p_value_lr, std_err = stats.linregress(x_days, y)
+
+                # compute t-stat and p using t-dist if possible
+                if std_err and std_err > 0 and len(y) > 2:
+                    t_stat = slope / std_err
+                    dfree = max(len(y) - 2, 1)
+                    p_from_t = 2.0 * stats.t.sf(abs(t_stat), dfree)
+                else:
+                    t_stat = np.nan
+                    dfree = 0
+                    p_from_t = p_value_lr
+
+                # choose p to format
+                p_to_format = p_from_t if (p_from_t and p_from_t > 0) else p_value_lr
+
+                p_str = format_pvalue(p_to_format, t_stat, dfree)
+                r_str = f"{r_value:.3f}"
+
+                # fitted values across the actual date points
+                fitted = intercept + slope * x_days
+                fig.add_scatter(
+                    x=data['datum'],
+                    y=fitted,
+                    mode='lines',
+                    name=f"Regressie {brand} (p={p_str}, r={r_str})",
+                    line=dict(color=color_map[brand], dash='dot'),
+                    hoverinfo='skip'
+                )
+
+    # style the line chart to dark card
+    fig.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=14),
+        legend=dict(font=dict(color='white', size=12)),
+        xaxis=dict(title_font=dict(color='white', size=12), tickfont=dict(color='white', size=11)),
+        yaxis=dict(title_font=dict(color='white', size=12), tickfont=dict(color='white', size=11)),
+        hovermode='x unified',
+        margin=dict(l=40, r=20, t=70, b=40)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Bar chart (800 px wide) ----
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
+    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
+    categories = totalen['brandstof'].tolist()
+
+    bar_fig = px.bar(
+        totalen,
+        x='brandstof',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+        text='aantal',
+        category_orders={'brandstof': categories}
+    )
+
+    bar_fig.update_traces(width=0.6, textposition='auto')
+    bar_fig.update_layout(
+        width=800,
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=14),
+        legend=dict(font=dict(color='white', size=12), orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        xaxis=dict(title_font=dict(color='white', size=12), tickfont=dict(color='white', size=11), type='category', categoryorder='array', categoryarray=categories, ticks='outside'),
+        yaxis=dict(title_font=dict(color='white', size=12), tickfont=dict(color='white', size=11)),
+        bargap=0.20,
+        height=360,
+        margin=dict(l=40, r=20, t=70, b=40)
+    )
+
+    st.plotly_chart(bar_fig, use_container_width=False)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof] "
+        "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+    )
+
+# ===============================
+# TAB 3: Laadpalen map (centered)
+# ===============================
+with tab3:
+    # center the map by using columns and placing map in the middle column
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col2:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        m = build_map()
+        st_folium(m, width=1000, height=800)
+        st.markdown('</div>', unsafe_allow_html=True)
