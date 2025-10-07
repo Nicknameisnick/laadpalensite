@@ -21,9 +21,11 @@ st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 st.markdown(
     """
     <style>
-    .stApp {
-        background-color: #0e1117;
-        color: white;
+   .stApp {
+        background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
 
     /* Rounded container look for charts */
@@ -210,7 +212,7 @@ with tab1:
     )
 
     bar_fig.update_layout(
-        width=400,
+        width=800,
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white'),
@@ -243,3 +245,4 @@ with tab3:
     m = build_map()
     st_folium(m, width=1000, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
