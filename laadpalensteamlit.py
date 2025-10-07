@@ -7,6 +7,8 @@ from shapely.geometry import Point
 import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
+from scipy import stats
+import numpy as np
 
 # -----------------------------
 # Page config MUST be first
@@ -14,16 +16,32 @@ from streamlit_folium import st_folium
 st.set_page_config(page_title="Laadpalen en Elektrisch vervoer", layout="wide")
 
 # -----------------------------
-# Custom background (no logo)
+# Custom dark theme & styling
 # -----------------------------
 st.markdown(
     """
     <style>
     .stApp {
-        background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        background-color: #0e1117;
+        color: white;
+    }
+
+    /* Rounded container look for charts */
+    .chart-container {
+        background-color: #1e222b;
+        padding: 20px;
+        border-radius: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Tabs text color */
+    .stTabs [role="tab"] {
+        color: white !important;
+    }
+    .stTabs [role="tab"][aria-selected="true"] {
+        color: #00c0ff !important;
+        font-weight: bold;
     }
     </style>
     """,
@@ -38,7 +56,7 @@ geometry = [Point(a) for a in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen[
 Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
 
 def build_map():
-    m = folium.Map(location=[52.1, 5.3], zoom_start=7)
+    m = folium.Map(location=[52.1, 5.3], zoom_start=8, tiles="CartoDB dark_matter")
     marker_cluster = MarkerCluster().add_to(m)
     for _, row in Laadpalen1.iterrows():
         folium.Marker(
@@ -51,7 +69,7 @@ def build_map():
 # Tabs
 # ===============================
 tab1, tab2, tab3 = st.tabs([
-   "Voertuigverdeling over de tijd", 
+   "Voertuigverdeling over de tijd",
    "Oplaad data",
    "Laadpalen map"
 ])
@@ -60,30 +78,25 @@ tab1, tab2, tab3 = st.tabs([
 # TAB 1: Personenauto’s per kwartaal
 # ===============================
 with tab1:
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
     # Lees CSV in
     df_raw = pd.read_csv("personenautos_csb.csv")
-
-    # De echte kolomnamen staan in de tweede rij
     df = df_raw.copy()
     new_cols = df.iloc[0].tolist()
     df.columns = new_cols
     df = df.drop(index=0).reset_index(drop=True)
-
-    # Hou alleen relevante kolommen
     df = df[['Brandstofsoort voertuig', 'Benzine', 'Diesel', 'Full elektric (BEV)', 'Totaal hybrides']]
 
-    # Hernoem kolommen
     df.rename(columns={
         'Brandstofsoort voertuig': 'kwartaal',
         'Full elektric (BEV)': 'elektrisch',
         'Totaal hybrides': 'hybride'
     }, inplace=True)
 
-    # Zet getallen om naar numeriek
     for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # Converteer kwartaal naar datum
     def parse_quarter(q):
         try:
             year_part, q_part = q.split()[:2]
@@ -97,7 +110,6 @@ with tab1:
     df['datum'] = df['kwartaal'].apply(parse_quarter)
     df = df.dropna(subset=['datum'])
 
-    # Data smelten
     melted = df.melt(
         id_vars='datum',
         value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
@@ -106,15 +118,14 @@ with tab1:
     )
     melted = melted.sort_values('datum')
 
-    # Kleuren
     color_map = {
-        'Benzine': 'darkblue',
+        'Benzine': 'dodgerblue',
         'Diesel': 'saddlebrown',
-        'elektrisch': 'yellow',
-        'hybride': 'green'
+        'elektrisch': 'gold',
+        'hybride': 'limegreen'
     }
 
-    # Slider
+    # Date filter
     min_date = melted['datum'].min().to_pydatetime()
     max_date = melted['datum'].max().to_pydatetime()
 
@@ -125,10 +136,8 @@ with tab1:
         value=(min_date, max_date),
         format="YYYY-MM"
     )
-
     filtered = melted[(melted['datum'] >= selected_date[0]) & (melted['datum'] <= selected_date[1])]
 
-    # Multi-select brandstof
     brandstof_opties = filtered['brandstof'].unique().tolist()
     selected_brandstoffen = st.multiselect(
         "Selecteer brandstoftypes om te tonen",
@@ -137,7 +146,10 @@ with tab1:
     )
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
-    # Lijnplot
+    # Buttons for regression lines
+    show_reg_benzine = st.toggle("Toon regressielijn Benzine", value=False)
+    show_reg_elektrisch = st.toggle("Toon regressielijn Elektrisch", value=False)
+
     fig = px.line(
         filtered,
         x='datum',
@@ -146,18 +158,39 @@ with tab1:
         color_discrete_map=color_map,
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
+
+    # Add regressions for Benzine and Elektrisch
+    for brand in ['Benzine', 'elektrisch']:
+        if (brand == 'Benzine' and show_reg_benzine) or (brand == 'elektrisch' and show_reg_elektrisch):
+            data = filtered[filtered['brandstof'] == brand]
+            x = np.arange(len(data))
+            y = data['aantal'].values
+            slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
+            line = intercept + slope * x
+            fig.add_scatter(
+                x=data['datum'],
+                y=line,
+                mode='lines',
+                name=f"Regressie {brand} (p={p_value:.3f}, r={r_value:.3f})",
+                line=dict(color=color_map[brand], dash='dot')
+            )
+
     fig.update_layout(
-        plot_bgcolor='#2f2f2f',
-        paper_bgcolor='#2f2f2f',
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
         font=dict(color='white'),
         legend=dict(font=dict(color='white')),
         xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified'
     )
-    st.plotly_chart(fig, use_container_width=True)
 
-        # Bar chart (smaller and properly centered)
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Bar chart ----
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
     bar_fig = px.bar(
         totalen,
@@ -169,37 +202,34 @@ with tab1:
         text='aantal'
     )
 
-    # Adjust bar width and centering
     bar_fig.update_traces(
-        width=0.6,               # makes bars slightly thinner for visual balance
+        width=0.6,
         textposition='auto',
-        offsetgroup=None,        # ensures single-group centering
+        offsetgroup=None,
         alignmentgroup=None
     )
 
-    # Layout: fixed width 400px, dark gray background, white text
     bar_fig.update_layout(
-        width=800,
-        plot_bgcolor='#2f2f2f',
-        paper_bgcolor='#2f2f2f',
+        width=400,
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
         font=dict(color='white'),
         legend=dict(font=dict(color='white')),
         xaxis=dict(
             title_font=dict(color='white'),
             tickfont=dict(color='white'),
             type='category',
-            tickmode='linear',
             categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist(),  # ensure correct order
-            tickangle=0
+            categoryarray=totalen['brandstof'].tolist()
         ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        bargap=0.2,  # spacing between bars
+        bargap=0.2,
         height=350
     )
 
     st.plotly_chart(bar_fig, use_container_width=False)
- # Bron
+    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown(
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
@@ -209,7 +239,7 @@ with tab1:
 # TAB 3: Laadpalen map
 # ===============================
 with tab3:
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     m = build_map()
-    st_folium(m, width=1200, height=800)  # bigger map
-
-
+    st_folium(m, width=1000, height=750)
+    st.markdown('</div>', unsafe_allow_html=True)
