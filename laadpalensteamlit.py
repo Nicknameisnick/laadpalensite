@@ -1,4 +1,3 @@
-
 import requests
 import pandas as pd
 import streamlit as st
@@ -152,6 +151,7 @@ with tab1:
     # Buttons for regression lines
     show_reg_benzine = st.toggle("Toon regressielijn Benzine", value=False)
     show_reg_elektrisch = st.toggle("Toon regressielijn Elektrisch", value=False)
+    show_reg_hybride = st.toggle("Toon regressielijn Hybride", value=False)
 
     fig = px.line(
         filtered,
@@ -162,21 +162,27 @@ with tab1:
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
 
-    # Add regressions for Benzine and Elektrisch
-    for brand in ['Benzine', 'elektrisch']:
-        if (brand == 'Benzine' and show_reg_benzine) or (brand == 'elektrisch' and show_reg_elektrisch):
+    # Add regressions for Benzine, Elektrisch, Hybride
+    for brand in ['Benzine', 'elektrisch', 'hybride']:
+        show_toggle = (
+            (brand == 'Benzine' and show_reg_benzine) or
+            (brand == 'elektrisch' and show_reg_elektrisch) or
+            (brand == 'hybride' and show_reg_hybride)
+        )
+        if show_toggle:
             data = filtered[filtered['brandstof'] == brand]
-            x = np.arange(len(data))
-            y = data['aantal'].values
-            slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
-            line = intercept + slope * x
-            fig.add_scatter(
-                x=data['datum'],
-                y=line,
-                mode='lines',
-                name=f"Regressie {brand} (p={p_value:.3f}, r={r_value:.3f})",
-                line=dict(color=color_map[brand], dash='dot')
-            )
+            if len(data) > 1:
+                x = np.arange(len(data))
+                y = data['aantal'].values
+                slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
+                line = intercept + slope * x
+                fig.add_scatter(
+                    x=data['datum'],
+                    y=line,
+                    mode='lines',
+                    name=f"Regressie {brand} (p={p_value:.3e}, r={r_value:.3f})",
+                    line=dict(color=color_map[brand], dash='dot')
+                )
 
     fig.update_layout(
         plot_bgcolor='#1e222b',
@@ -207,9 +213,7 @@ with tab1:
 
     bar_fig.update_traces(
         width=0.6,
-        textposition='auto',
-        offsetgroup=None,
-        alignmentgroup=None
+        textposition='auto'
     )
 
     bar_fig.update_layout(
@@ -242,7 +246,7 @@ with tab1:
 # TAB 3: Laadpalen map
 # ===============================
 with tab3:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+    st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
     m = build_map()
-    st_folium(m, width=1000, height=750)
+    st_folium(m, width=1700, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
