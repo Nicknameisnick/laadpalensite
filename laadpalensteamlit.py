@@ -213,7 +213,9 @@ with tab1:
 
     bar_fig.update_traces(
         width=0.6,
-        textposition='auto'
+        textposition='auto',
+        offsetgroup=None,
+        alignmentgroup=None
     )
 
     bar_fig.update_layout(
@@ -228,11 +230,9 @@ with tab1:
             type='category',
             categoryorder='array',
             categoryarray=totalen['brandstof'].tolist(),
-            tickmode='array'
         ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         bargap=0.2,
-        bargroupgap=0,
         height=350
     )
 
@@ -252,3 +252,4 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
