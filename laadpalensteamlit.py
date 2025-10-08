@@ -52,7 +52,7 @@ st.markdown(
 response = requests.get("https://api.openchargemap.io/v3/poi/?output=json&countrycode=NL&maxresults=1000&compact=true&verbose=false&key=2960318e-86ae-49e0-82b1-3c8bc6790b41") 
 responsejson = response.json() 
 Laadpalen = pd.json_normalize(responsejson) 
-df4 = pd.json_normalize(Laadpalen_api.Connections) 
+df4 = pd.json_normalize(Laadpalen.Connections) 
 df5 = pd.json_normalize(df4[0]) 
 Laadpalen = pd.concat([Laadpalen_api, df5], axis=1)
 
@@ -353,6 +353,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
