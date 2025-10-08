@@ -277,7 +277,7 @@ with tab2:
     # ===========================
     # Load and clean data
     # ===========================
-    df_lp = pd.read_csv('laadpaaldata.csv')
+    df_lp = pd.read_csv('laadpaaldata_cleaned.csv')
 
     # Ensure datetime columns
     df_lp['Started'] = pd.to_datetime(df_lp['Started'], errors='coerce')
@@ -387,6 +387,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
