@@ -176,7 +176,9 @@ with tab1:
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
 
-    # Add regressions for Benzine, Elektrisch, Hybride
+    # Add regressions with future projection to 2030
+    future_end = pd.Timestamp('2030-01-01')
+
     for brand in ['Benzine', 'elektrisch', 'hybride']:
         show_toggle = (
             (brand == 'Benzine' and show_reg_benzine) or
@@ -184,15 +186,24 @@ with tab1:
             (brand == 'hybride' and show_reg_hybride)
         )
         if show_toggle:
-            data = filtered[filtered['brandstof'] == brand]
+            data = filtered[filtered['brandstof'] == brand].sort_values('datum')
             if len(data) > 1:
+                # Prepare regression input
                 x = np.arange(len(data))
                 y = data['aantal'].values
                 slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
-                line = intercept + slope * x
+
+                # Predict future values until 2030
+                last_date = data['datum'].max()
+                future_dates = pd.date_range(last_date, future_end, freq='QS')[1:]  # quarterly steps
+                total_x = np.arange(len(data) + len(future_dates))
+                predicted = intercept + slope * total_x
+                full_dates = pd.concat([data['datum'], pd.Series(future_dates)], ignore_index=True)
+
+                # Add regression line
                 fig.add_scatter(
-                    x=data['datum'],
-                    y=line,
+                    x=full_dates,
+                    y=predicted,
                     mode='lines',
                     name=f"Regressie {brand} (p={p_value:.3e}, r={r_value:.3f})",
                     line=dict(color=color_map[brand], dash='dot')
@@ -201,7 +212,7 @@ with tab1:
     fig.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white'),
+        font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
         xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
@@ -236,7 +247,7 @@ with tab1:
         width=800,
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white'),
+        font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
         xaxis=dict(
             title_font=dict(color='white'),
@@ -257,6 +268,7 @@ with tab1:
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
+
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
@@ -373,6 +385,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
