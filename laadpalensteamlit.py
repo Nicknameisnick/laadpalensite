@@ -166,6 +166,7 @@ with tab1:
     show_reg_benzine = st.toggle("Toon regressielijn Benzine", value=False)
     show_reg_elektrisch = st.toggle("Toon regressielijn Elektrisch", value=False)
     show_reg_hybride = st.toggle("Toon regressielijn Hybride", value=False)
+     show_reg_diesel = st.toggle("Toon regressielijn Diesel", value=False)
 
     fig = px.line(
         filtered,
@@ -183,7 +184,8 @@ with tab1:
         show_toggle = (
             (brand == 'Benzine' and show_reg_benzine) or
             (brand == 'elektrisch' and show_reg_elektrisch) or
-            (brand == 'hybride' and show_reg_hybride)
+            (brand == 'hybride' and show_reg_hybride) or
+             (brand == 'diesel' and show_reg_diesel)
         )
         if show_toggle:
             data = filtered[filtered['brandstof'] == brand].sort_values('datum')
@@ -385,6 +387,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
