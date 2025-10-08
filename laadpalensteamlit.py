@@ -257,76 +257,93 @@ with tab1:
         "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
     )
-# ===============================
-# TAB 2: Oplaad data
-# ===============================
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    # Load data
+
+    # ===========================
+    # Load and clean data
+    # ===========================
     df_lp = pd.read_csv('laadpaaldata.csv')
-    
+
     # Ensure datetime columns
     df_lp['Started'] = pd.to_datetime(df_lp['Started'], errors='coerce')
     df_lp['Ended'] = pd.to_datetime(df_lp['Ended'], errors='coerce')
     df_lp = df_lp.dropna(subset=['Started', 'Ended'])
-    
-    # ----------------------
-    # 1. MaxPower frequency bar graph
-    # ----------------------
-    maxpower_freq = df_lp['MaxPower'].value_counts().reset_index()
-    maxpower_freq.columns = ['MaxPower', 'Frequency']
-    maxpower_freq = maxpower_freq.sort_values('MaxPower')
+
+    # ===========================
+    # 1. MaxPower frequency (1 kW bins)
+    # ===========================
+    bin_width = 1000
+    max_power_bins = range(0, int(df_lp['MaxPower'].max()) + bin_width, bin_width)
+    df_lp['MaxPower_bin'] = pd.cut(df_lp['MaxPower'], bins=max_power_bins)
+
+    maxpower_freq = df_lp['MaxPower_bin'].value_counts().reset_index()
+    maxpower_freq.columns = ['MaxPower_bin', 'Frequency']
+    maxpower_freq = maxpower_freq.sort_values('MaxPower_bin')
 
     fig_maxpower = px.bar(
         maxpower_freq,
-        x='MaxPower',
+        x='MaxPower_bin',
         y='Frequency',
         text='Frequency',
-        title='Frequentie van MaxPower bij laadpalen',
-        labels={'MaxPower':'Max Power (kW)', 'Frequency':'Aantal keren'}
+        title='Frequentie van MaxPower bij laadpalen (in 1 kW-bins)',
+        labels={'MaxPower_bin': 'Max Power (kW-bins)', 'Frequency': 'Aantal keren'}
     )
     fig_maxpower.update_traces(textposition='auto')
     fig_maxpower.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white'),
+        font=dict(color='white', size=20),
         xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
     )
     st.plotly_chart(fig_maxpower, use_container_width=True)
-    
-    # ----------------------
-    # 2. Average occupancy per hour
-    # ----------------------
-    df_lp['DurationHours'] = (df_lp['Ended'] - df_lp['Started']).dt.total_seconds() / 3600
-    df_lp['Hour'] = df_lp['Started'].dt.hour
-    occupancy_per_hour = df_lp.groupby('Hour')['DurationHours'].mean().reset_index()
-    occupancy_per_hour.columns = ['Hour', 'AvgOccupancyHours']
+
+    # ===========================
+    # 2. Average occupancy per hour of day
+    # ===========================
+    # Create a range for hours 0–23
+    hours = range(24)
+    occupancy = []
+
+    for hour in hours:
+        # Count how many sessions are active during this hour
+        active = df_lp[(df_lp['Started'].dt.hour <= hour) & (df_lp['Ended'].dt.hour > hour)]
+        occupancy.append(len(active))
+
+    # Convert to dataframe
+    occupancy_per_hour = pd.DataFrame({
+        'Hour': hours,
+        'AvgOccupancy': occupancy
+    })
+
+    # Normalize by number of days (approx, since it's 1 year)
+    days_in_data = (df_lp['Ended'].max() - df_lp['Started'].min()).days
+    occupancy_per_hour['AvgOccupancy'] = occupancy_per_hour['AvgOccupancy'] / days_in_data
+    occupancy_per_hour['AvgOccupancy'] = occupancy_per_hour['AvgOccupancy'].clip(lower=0)
 
     fig_occupancy = px.bar(
         occupancy_per_hour,
         x='Hour',
-        y='AvgOccupancyHours',
-        text='AvgOccupancyHours',
-        title='Gemiddelde bezetting per uur (in uren)',
-        labels={'Hour':'Uur van de dag', 'AvgOccupancyHours':'Gemiddelde bezetting (uur)'}
+        y='AvgOccupancy',
+        text='AvgOccupancy',
+        title='Gemiddelde bezetting per uur van de dag',
+        labels={'Hour': 'Uur van de dag', 'AvgOccupancy': 'Gemiddeld aantal laadpalen in gebruik'}
     )
     fig_occupancy.update_traces(texttemplate='%{text:.2f}', textposition='auto')
     fig_occupancy.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white'),
+        font=dict(color='white', size=20),
         xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
     )
     st.plotly_chart(fig_occupancy, use_container_width=True)
-    
-    # ----------------------
+
+    # ===========================
     # 3. ConnectedTime vs ChargeTime
-    # ----------------------
-    df_compare = df_lp[['ConnectedTime', 'ChargeTime']]
-    df_compare = df_compare.melt(var_name='Type', value_name='TimeHours')
+    # ===========================
+    df_compare = df_lp[['ConnectedTime', 'ChargeTime']].melt(var_name='Type', value_name='TimeHours')
 
     fig_compare = px.box(
         df_compare,
@@ -334,12 +351,12 @@ with tab2:
         y='TimeHours',
         color='Type',
         title='Vergelijking tussen ConnectedTime en ChargeTime',
-        labels={'TimeHours':'Tijd (uur)'}
+        labels={'TimeHours': 'Tijd (uur)'}
     )
     fig_compare.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        font=dict(color='white'),
+        font=dict(color='white', size=20),
         xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         showlegend=False
@@ -348,11 +365,14 @@ with tab2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+
+
 with tab3:
     st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
