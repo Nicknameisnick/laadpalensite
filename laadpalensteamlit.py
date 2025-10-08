@@ -352,11 +352,11 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ===============================
-# Caching API request + processing
+# Cache API + data prep
 # ===============================
-@st.cache_data(ttl=3600)  # cache for 1 hour
+@st.cache_data(ttl=3600)
 def load_data():
-    url = "https://api.openchargemap.io/v3/poi/?output=json&countrycode=NL&maxresults=1000&compact=true&verbose=false&key=2960318e-86ae-49e0-82b1-3c8bc6790b41"
+    url = "https://www.webuildinternet.com/articles/2015-07-19-geojson-data-of-the-netherlands/provinces.geojson"
     response = requests.get(url)
     responsejson = response.json()
 
@@ -366,7 +366,7 @@ def load_data():
     Laadpalen = pd.concat([Laadpalen, df5], axis=1)
 
     columns_to_drop = [
-        "Amps", "Voltage", "AddressInfo.StateOrProvince", "NumberOfPoints", "UsageCost", "UUID", 
+        "Amps", "Voltage", "NumberOfPoints", "UsageCost", "UUID", 
         "DataProviderID", "Reference", "Connections", "AddressInfo.DistanceUnit", 
         "AddressInfo.AddressLine2", "AddressInfo.ContactTelephone1", "AddressInfo.RelatedURL", 
         "DataProvidersReference", "IsRecentlyVerified", "DataQualityLevel", "AddressInfo.CountryID", 
@@ -374,18 +374,36 @@ def load_data():
     ]
     Laadpalen.drop(columns_to_drop, axis=1, inplace=True)
 
-    # Create GeoDataFrame
+    # Convert to GeoDataFrame
     geometry = [Point(xy) for xy in zip(Laadpalen["AddressInfo.Longitude"], Laadpalen["AddressInfo.Latitude"])]
     Laadpalen1 = gpd.GeoDataFrame(Laadpalen, geometry=geometry, crs="EPSG:4326")
     return Laadpalen1
 
 # ===============================
+# Load Dutch provinces from GitHub
+# ===============================
+@st.cache_data
+def load_provinces():
+    url = "https://raw.githubusercontent.com/nlesc-jcer/data-netherlands-provinces/main/provinces.geojson"
+    provinces = gpd.read_file(url)
+    provinces = provinces.to_crs("EPSG:4326")
+    return provinces
+
+# ===============================
+# Spatial Join
+# ===============================
+def add_province_column(Laadpalen1, provinces):
+    joined = gpd.sjoin(Laadpalen1, provinces, how="left", predicate="within")
+    joined.rename(columns={"name": "Province"}, inplace=True)  # province names in 'name'
+    return joined
+
+# ===============================
 # Build Map
 # ===============================
-def build_map(Laadpalen1):
-    m = folium.Map(location=[52.1, 5.3], zoom_start=8)
+def build_map(data, location=[52.1, 5.3], zoom_start=8):
+    m = folium.Map(location=location, zoom_start=zoom_start)
     marker_cluster = MarkerCluster().add_to(m)
-    for _, row in Laadpalen1.iterrows():
+    for _, row in data.iterrows():
         folium.Marker(
             location=[row["AddressInfo.Latitude"], row["AddressInfo.Longitude"]],
             popup=row.get("AddressInfo.Title", "Charging Station")
@@ -393,19 +411,35 @@ def build_map(Laadpalen1):
     return m
 
 # ===============================
-# Streamlit tab
+# Streamlit UI
 # ===============================
 with tab3:
     st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
 
-    # Load cached data
+    # Load data
     Laadpalen1 = load_data()
+    provinces = load_provinces()
 
-    # Show map
-    m = build_map(Laadpalen1)
+    # Add province info via spatial join
+    Laadpalen_with_province = add_province_column(Laadpalen1, provinces)
+
+    # Dropdown for provinces
+    province_list = sorted(Laadpalen_with_province["Province"].dropna().unique())
+    province_choice = st.selectbox("Select a province:", ["All"] + province_list)
+
+    # Filter & center map
+    if province_choice != "All":
+        filtered = Laadpalen_with_province[Laadpalen_with_province["Province"] == province_choice]
+        center_lat = filtered["AddressInfo.Latitude"].mean()
+        center_lon = filtered["AddressInfo.Longitude"].mean()
+        m = build_map(filtered, location=[center_lat, center_lon], zoom_start=10)
+    else:
+        m = build_map(Laadpalen_with_province, location=[52.1, 5.3], zoom_start=8)
+
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
