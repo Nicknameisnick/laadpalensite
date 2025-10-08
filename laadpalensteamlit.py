@@ -281,13 +281,17 @@ with tab2:
     maxpower_freq.columns = ['MaxPower_bin', 'Frequency']
     maxpower_freq = maxpower_freq.sort_values('MaxPower_bin')
 
+    # ✅ FIX: Convert Interval objects to readable strings
+    maxpower_freq['MaxPower_bin'] = maxpower_freq['MaxPower_bin'].astype(str)
+
     fig_maxpower = px.bar(
         maxpower_freq,
         x='MaxPower_bin',
         y='Frequency',
         text='Frequency',
         title='Frequentie van MaxPower bij laadpalen (in 1 kW-bins)',
-        labels={'MaxPower_bin': 'Max Power (kW-bins)', 'Frequency': 'Aantal keren'}
+        labels={'MaxPower_bin': 'Max Power (kW-bins)', 'Frequency': 'Aantal keren'},
+        width=800
     )
     fig_maxpower.update_traces(textposition='auto')
     fig_maxpower.update_layout(
@@ -302,22 +306,18 @@ with tab2:
     # ===========================
     # 2. Average occupancy per hour of day
     # ===========================
-    # Create a range for hours 0–23
     hours = range(24)
     occupancy = []
 
     for hour in hours:
-        # Count how many sessions are active during this hour
         active = df_lp[(df_lp['Started'].dt.hour <= hour) & (df_lp['Ended'].dt.hour > hour)]
         occupancy.append(len(active))
 
-    # Convert to dataframe
     occupancy_per_hour = pd.DataFrame({
         'Hour': hours,
         'AvgOccupancy': occupancy
     })
 
-    # Normalize by number of days (approx, since it's 1 year)
     days_in_data = (df_lp['Ended'].max() - df_lp['Started'].min()).days
     occupancy_per_hour['AvgOccupancy'] = occupancy_per_hour['AvgOccupancy'] / days_in_data
     occupancy_per_hour['AvgOccupancy'] = occupancy_per_hour['AvgOccupancy'].clip(lower=0)
@@ -328,7 +328,8 @@ with tab2:
         y='AvgOccupancy',
         text='AvgOccupancy',
         title='Gemiddelde bezetting per uur van de dag',
-        labels={'Hour': 'Uur van de dag', 'AvgOccupancy': 'Gemiddeld aantal laadpalen in gebruik'}
+        labels={'Hour': 'Uur van de dag', 'AvgOccupancy': 'Gemiddeld aantal laadpalen in gebruik'},
+        width=800
     )
     fig_occupancy.update_traces(texttemplate='%{text:.2f}', textposition='auto')
     fig_occupancy.update_layout(
@@ -341,7 +342,7 @@ with tab2:
     st.plotly_chart(fig_occupancy, use_container_width=True)
 
     # ===========================
-    # 3. ConnectedTime vs ChargeTime
+    # 3. ConnectedTime vs ChargeTime boxplot
     # ===========================
     df_compare = df_lp[['ConnectedTime', 'ChargeTime']].melt(var_name='Type', value_name='TimeHours')
 
@@ -351,7 +352,8 @@ with tab2:
         y='TimeHours',
         color='Type',
         title='Vergelijking tussen ConnectedTime en ChargeTime',
-        labels={'TimeHours': 'Tijd (uur)'}
+        labels={'TimeHours': 'Tijd (uur)'},
+        width=800
     )
     fig_compare.update_layout(
         plot_bgcolor='#1e222b',
@@ -366,12 +368,12 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-
 with tab3:
     st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
