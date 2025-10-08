@@ -180,12 +180,12 @@ with tab1:
     # Add regressions with future projection to 2030
     future_end = pd.Timestamp('2030-01-01')
 
-    for brand in ['Benzine', 'elektrisch', 'hybride']:
+    for brand in ['Benzine', 'elektrisch', 'hybride', 'diesel']:
         show_toggle = (
             (brand == 'Benzine' and show_reg_benzine) or
             (brand == 'elektrisch' and show_reg_elektrisch) or
             (brand == 'hybride' and show_reg_hybride) or
-             (brand == 'diesel' and show_reg_diesel)
+            (brand == 'diesel' and show_reg_diesel)
         )
         if show_toggle:
             data = filtered[filtered['brandstof'] == brand].sort_values('datum')
@@ -387,6 +387,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
