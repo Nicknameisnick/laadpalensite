@@ -54,7 +54,7 @@ responsejson = response.json()
 Laadpalen = pd.json_normalize(responsejson) 
 df4 = pd.json_normalize(Laadpalen.Connections) 
 df5 = pd.json_normalize(df4[0]) 
-Laadpalen = pd.concat([Laadpalen_api, df5], axis=1)
+Laadpalen = pd.concat([Laadpalen, df5], axis=1)
 
 columns_to_drop = [
     "Amps", "Voltage", "AddressInfo.StateOrProvince", "NumberOfPoints", "UsageCost", "UUID", 
@@ -353,6 +353,7 @@ with tab3:
     m = build_map()
     st_folium(m, width=1750, height=750)
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
