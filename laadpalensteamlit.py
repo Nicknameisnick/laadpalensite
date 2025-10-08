@@ -351,91 +351,84 @@ with tab2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-
 # -----------------------
-# Cached: load charging points
+# Cache: laad laadpalen (OpenChargeMap)
 # -----------------------
 @st.cache_data(ttl=3600)
-def load_charging_points():
+def laad_laadpalen():
     url = "https://api.openchargemap.io/v3/poi/?output=json&countrycode=NL&maxresults=10000&compact=true&verbose=false&key=2960318e-86ae-49e0-82b1-3c8bc6790b41"
     r = requests.get(url, timeout=30)
     r.raise_for_status()
     data = r.json()
     df = pd.json_normalize(data)
 
-    # drop rows without coordinates
+    # verwijder rijen zonder coördinaten
     df = df.dropna(subset=["AddressInfo.Latitude", "AddressInfo.Longitude"])
-    # create geometry and GeoDataFrame
+    # maak geometrie aan
     geometry = [Point(xy) for xy in zip(df["AddressInfo.Longitude"], df["AddressInfo.Latitude"])]
     gdf = gpd.GeoDataFrame(df, geometry=geometry, crs="EPSG:4326")
     return gdf
 
 # -----------------------
-# Cached: load provinces GeoJSON from your provided URL
+# Cache: provincies laden uit GeoJSON
 # -----------------------
 @st.cache_data(ttl=86400)
-def load_provinces_geojson():
+def laad_provincies():
     url = "https://www.webuildinternet.com/articles/2015-07-19-geojson-data-of-the-netherlands/provinces.geojson"
-    provinces = gpd.read_file(url)
-    provinces = provinces.to_crs("EPSG:4326")
-    return provinces
+    provincies = gpd.read_file(url)
+    provincies = provincies.to_crs("EPSG:4326")
+    return provincies
 
 # -----------------------
-# Helper: find plausible province name column
+# Hulpfunctie: kolomnaam zoeken
 # -----------------------
-def find_name_column(gdf):
-    candidates = ["name", "naam", "provincie", "provincienaam", "NAME", "Name"]
-    for c in candidates:
+def vind_naam_kolom(gdf):
+    kandidaten = ["name", "naam", "provincie", "provincienaam", "NAME", "Name"]
+    for c in kandidaten:
         if c in gdf.columns:
             return c
-    # fallback to first non-geometry column
     for c in gdf.columns:
         if c != gdf.geometry.name:
             return c
     return None
 
 # -----------------------
-# Spatial join with fallback
+# Provincies koppelen aan laadpalen
 # -----------------------
-def assign_province_to_points(points_gdf, provinces_gdf):
-    points = points_gdf.copy()
-    provinces = provinces_gdf.copy()
+def koppel_provincies(laadpalen, provincies):
+    punten = laadpalen.copy()
+    provs = provincies.copy()
 
-    # ensure same CRS
-    if points.crs != provinces.crs:
-        provinces = provinces.to_crs(points.crs)
+    if punten.crs != provs.crs:
+        provs = provs.to_crs(punten.crs)
 
-    province_name_col = find_name_column(provinces)
+    kolom = vind_naam_kolom(provs)
 
-    # try fast spatial join (requires spatial index like rtree/pygeos)
     try:
-        joined = gpd.sjoin(points, provinces[[province_name_col, provinces.geometry.name]], how="left", predicate="within")
-        joined = joined.rename(columns={province_name_col: "Province"})
-        # drop sjoin index_right column if present
+        joined = gpd.sjoin(punten, provs[[kolom, provs.geometry.name]], how="left", predicate="within")
+        joined = joined.rename(columns={kolom: "Provincie"})
         joined = joined.drop(columns=[c for c in ["index_right"] if c in joined.columns])
         return joined
-    except Exception as e:
-        # fallback: loop polygons (slower but works without rtree)
-        st.warning("Fast spatial join failed (missing spatial index). Falling back to slower loop-based assignment. Install 'rtree' to speed this up.")
-        points["Province"] = None
-        # iterate provinces polygons and fill
-        for _, prow in provinces.iterrows():
-            pname = prow.get(province_name_col) if province_name_col else None
-            mask_within = points.geometry.within(prow.geometry)
-            points.loc[mask_within, "Province"] = pname
-        return points
+    except Exception:
+        st.warning("Snelle ruimtelijke join mislukt. Valt terug op tragere methode. Installeer 'rtree' voor betere prestaties.")
+        punten["Provincie"] = None
+        for _, prow in provs.iterrows():
+            naam = prow.get(kolom) if kolom else None
+            mask = punten.geometry.within(prow.geometry)
+            punten.loc[mask, "Provincie"] = naam
+        return punten
 
 # -----------------------
-# Build folium map
+# Kaart bouwen
 # -----------------------
-def build_map(gdf, location=[52.1, 5.3], zoom_start=8):
-    m = folium.Map(location=location, zoom_start=zoom_start)
-    marker_cluster = MarkerCluster().add_to(m)
+def bouw_kaart(gdf, locatie=[52.1, 5.3], zoom=8):
+    m = folium.Map(location=locatie, zoom_start=zoom)
+    cluster = MarkerCluster().add_to(m)
     for _, r in gdf.iterrows():
         folium.Marker(
             location=[r["AddressInfo.Latitude"], r["AddressInfo.Longitude"]],
-            popup=r.get("AddressInfo.Title", "Charging Station")
-        ).add_to(marker_cluster)
+            popup=r.get("AddressInfo.Title", "Laadpunt")
+        ).add_to(cluster)
     return m
 
 # -----------------------
@@ -444,43 +437,45 @@ def build_map(gdf, location=[52.1, 5.3], zoom_start=8):
 with tab3:
     st.markdown('<div class="chart-container" style="text-align:center;">', unsafe_allow_html=True)
 
-    # load cached data
-    points = load_charging_points()
-    provinces = load_provinces_geojson()
+    st.title("🔌 Laadpalen in Nederland per Provincie")
 
-    # assign provinces (cached result will be quick after first run)
-    points_with_prov = assign_province_to_points(points, provinces)
+    # laad data
+    laadpalen = laad_laadpalen()
+    provincies = laad_provincies()
+    laadpalen_met_prov = koppel_provincies(laadpalen, provincies)
 
-    # show counts (optional)
-    counts = points_with_prov["Province"].fillna("Unknown").value_counts()
-    st.write("Charging stations per province (incl. Unknown):")
+    # overzicht aantal laadpalen
+    st.subheader("Aantal laadpalen per provincie")
+    counts = laadpalen_met_prov["Provincie"].fillna("Onbekend").value_counts()
     st.dataframe(counts)
 
-    # build dropdown
-    province_options = ["All"] + sorted([p for p in points_with_prov["Province"].dropna().unique()])
-    province_choice = st.selectbox("Choose province", province_options)
+    # dropdown voor provincies
+    opties = ["Alle provincies"] + sorted([p for p in laadpalen_met_prov["Provincie"].dropna().unique()])
+    keuze = st.selectbox("Kies een provincie:", opties)
 
-    # filter & center map
-    if province_choice != "All":
-        filtered = points_with_prov[points_with_prov["Province"] == province_choice]
-        if len(filtered) == 0:
-            st.info("No charging stations found in this province.")
-            filtered = points_with_prov.iloc[0:0]  # empty
+    # filter & kaart centreren
+    if keuze != "Alle provincies":
+        gefilterd = laadpalen_met_prov[laadpalen_met_prov["Provincie"] == keuze]
+        if len(gefilterd) == 0:
+            st.info("Geen laadpalen gevonden in deze provincie.")
+            gefilterd = laadpalen_met_prov.iloc[0:0]
             center = [52.1, 5.3]
             zoom = 8
         else:
-            center = [filtered["AddressInfo.Latitude"].mean(), filtered["AddressInfo.Longitude"].mean()]
+            center = [gefilterd["AddressInfo.Latitude"].mean(), gefilterd["AddressInfo.Longitude"].mean()]
             zoom = 10
     else:
-        filtered = points_with_prov
+        gefilterd = laadpalen_met_prov
         center = [52.1, 5.3]
         zoom = 8
 
-    # show map (using st_folium; interactions will still trigger reruns)
-    m = build_map(filtered, location=center, zoom_start=zoom)
+    # kaart tonen
+    m = bouw_kaart(gefilterd, locatie=center, zoom=zoom)
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+
 
 
 
