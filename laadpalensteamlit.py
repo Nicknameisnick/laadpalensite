@@ -251,8 +251,7 @@ with tab1:
         textposition='auto',
         offsetgroup=None,
         alignmentgroup=None
-
-    )
+     )
 
  bar_fig.update_layout(
     width=800,
@@ -592,6 +591,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
