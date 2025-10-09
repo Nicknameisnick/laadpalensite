@@ -420,44 +420,35 @@ with tab2:
     st.plotly_chart(fig_compare, use_container_width=True)
 
 
-     # ===========================
-    # 4. 🔥 Heatmap: gemiddelde laadtijd per dag en uur
+        # ===========================
+    # 4. 🔥 Heatmap: correlatie tussen numerieke kolommen
     # ===========================
-    df_lp['Hour'] = df_lp['Started'].dt.hour
-    df_lp['DayOfWeek'] = df_lp['Started'].dt.day_name()
-
-    # Bepaal gemiddelde laadtijd per uur en dag
-    pivot_heatmap = df_lp.pivot_table(
-        index='DayOfWeek',
-        columns='Hour',
-        values='ChargeTime',
-        aggfunc='mean'
-    )
-
-    # Zorg dat dagen in juiste volgorde staan
-    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    pivot_heatmap = pivot_heatmap.reindex(day_order)
+    # Select only numeric columns
+    df_corr = df_lp.select_dtypes(include=['number']).corr()
 
     fig_heatmap = px.imshow(
-        pivot_heatmap,
-        color_continuous_scale='Viridis',
-        title='Gemiddelde laadtijd per uur en dag van de week',
-        labels=dict(x='Uur van de dag', y='Dag van de week', color='Gemiddelde laadtijd (uur)'),
+        df_corr,
+        text_auto=True,  # show correlation values
+        color_continuous_scale='RdBu_r',  # blue = negative, red = positive
+        zmin=-1, zmax=1,  # full correlation range
+        title='Correlatie tussen variabelen in laadpaaldata',
+        labels=dict(x='Variabelen', y='Variabelen', color='Correlatiecoëfficiënt'),
         width=800
     )
 
     fig_heatmap.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
-        coloraxis_colorbar=dict(title='Gem. laadtijd (uur)'),
+        coloraxis_colorbar=dict(title='Correlatie'),
         font=dict(color='white', size=20),
-        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
-        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20))
+        xaxis=dict(title_font=dict(size=20, color='white'), tickfont=dict(size=20, color='white')),
+        yaxis=dict(title_font=dict(size=20, color='white'), tickfont=dict(size=20, color='white'))
     )
 
     st.plotly_chart(fig_heatmap, use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
     
 # -----------------------
 # Cache: laad laadpalen (OpenChargeMap)
@@ -582,6 +573,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
