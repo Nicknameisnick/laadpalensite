@@ -232,44 +232,43 @@ with tab1:
         bargap=0.2,
         height=350
     )
+
     # ---- Bar chart ----
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+ st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
-    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
-    bar_fig = px.bar(
-        totalen,
-        x='brandstof',
-        y='aantal',
-        color='brandstof',
-        color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
-        text='aantal'
-    )
+ totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
+ bar_fig = px.bar(
+     totalen,
+     x='brandstof',
+     y='aantal',
+     color='brandstof',
+     color_discrete_map=color_map,
+     title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+     text='aantal'
+ )
 
-    bar_fig.update_traces(
-        width=0.6,
-        textposition='auto',
-        offsetgroup=None,
-        alignmentgroup=None
-    )
+ bar_fig.update_traces(
+     width=0.6,
+     textposition='auto'
+ )
 
-    bar_fig.update_layout(
-        width=800,
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            type='category',
-            categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist(),
-        ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        bargap=0.2,
-        height=350
-    )
+ bar_fig.update_layout(
+     width=800,
+     plot_bgcolor='#1e222b',
+     paper_bgcolor='#1e222b',
+     font=dict(color='white', size=20),
+     legend=dict(font=dict(color='white')),
+     xaxis=dict(
+         title_font=dict(color='white'),
+         tickfont=dict(color='white'),
+         type='category',
+         categoryorder='array',
+         categoryarray=totalen['brandstof'].tolist(),
+     ),
+     yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+     bargap=0.2,
+     height=350
+ )
 
 
 
@@ -305,17 +304,15 @@ with tab1:
         'Elektriciteit': 'gold'
     }
 
-    # ---- Base line chart ----
-    line_fig = px.line(
-        df_huidig_melted,
-        x='Jaar',
-        y='Aantal (miljoen)',
-        color='Brandstof',
-        color_discrete_map=huidig_color_map,
-        title="Aantal motorvoertuigen actief (2019–2025)"
-    )
-
-
+   line_fig = px.line(
+    df_huidig_melted,
+    x='Jaar',
+    y='Aantal (miljoen)',
+    color='Brandstof',
+    color_discrete_map=huidig_color_map,
+    title="Aantal motorvoertuigen actief (2019–2025)",
+    markers=True  # show data points
+)
 
     line_fig.update_layout(
         plot_bgcolor='#1e222b',
@@ -323,16 +320,25 @@ with tab1:
         font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
         xaxis=dict(
-        title_font=dict(color='white'),
-        tickfont=dict(color='white'),
-        range=[2019, 2025],  # 👈 Forces axis to start at 2019 and end at 2030
-        dtick=1              # 👈 Shows every year as a tick mark
-    ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            dtick=1,
+            showgrid=True,
+            gridcolor='gray'
+        ),
+        yaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            showgrid=True,
+            gridcolor='gray'
+        ),
         hovermode='x unified',
         width=800,
         height=350
     )
+
+
+
 
 # ---- Place both graphs next to each other ----
 col1, col2 = st.columns(2)
