@@ -233,7 +233,6 @@ with tab1:
         height=350
     )
     # ---- Bar chart ----
-        # ---- Bar chart ----
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
@@ -307,27 +306,27 @@ with tab1:
         title="Aantal motorvoertuigen actief (2019–2025)"
     )
 
-    # ---- Add regression lines (projected to 2030) ----
-    future_end = 2030
-    for brand in df_huidig_melted['Brandstof'].unique():
-        data = df_huidig_melted[df_huidig_melted['Brandstof'] == brand].sort_values('Jaar')
-        if len(data) > 1:
-            x = np.arange(len(data))
-            y = data['Aantal (miljoen)'].values
-            slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
+   # ---- Add regression lines (projected to 2030) ----
+future_end = 2030
+for brand in df_huidig_melted['Brandstof'].unique():
+    data = df_huidig_melted[df_huidig_melted['Brandstof'] == brand].sort_values('Jaar')
+    if len(data) > 1:
+        x = data['Jaar'].astype(float)
+        y = data['Aantal (miljoen)'].astype(float)
+        slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
 
-            # Future projection until 2030
-            future_years = np.arange(data['Jaar'].min(), future_end + 1)
-            x_future = np.arange(len(future_years))
-            predicted = intercept + slope * x_future
+        # Future projection until 2030
+        future_years = np.arange(data['Jaar'].min(), future_end + 1)
+        predicted = intercept + slope * future_years
 
-            line_fig.add_scatter(
-                x=future_years,
-                y=predicted,
-                mode='lines',
-                name=f"Regressie {brand} (p={p_value:.3e}, r={r_value:.3f})",
-                line=dict(color=huidig_color_map.get(brand, 'white'), dash='dot')
-            )
+        line_fig.add_scatter(
+            x=future_years,
+            y=predicted,
+            mode='lines',
+            name=f"Regressie {brand} (p={p_value:.3e}, r={r_value:.3f})",
+            line=dict(color=huidig_color_map.get(brand, 'white'), dash='dot')
+        )
+
 
     line_fig.update_layout(
         plot_bgcolor='#1e222b',
@@ -600,6 +599,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
