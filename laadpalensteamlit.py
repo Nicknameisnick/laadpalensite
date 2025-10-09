@@ -186,9 +186,9 @@ with tab1:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        legend=dict(font=dict(color='white',size=20)),
+        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
         hovermode='x unified'
     )
 
@@ -221,15 +221,15 @@ with tab1:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
+        legend=dict(font=dict(color='white',size=20)),
         xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
+            title_font=dict(color='white',size=20),
+            tickfont=dict(color='white',size=20),
             type='category',
             categoryorder='array',
             categoryarray=totalen['brandstof'].tolist(),
         ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
         bargap=0.2,
         height=350
     )
@@ -268,17 +268,17 @@ with tab1:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
+        legend=dict(font=dict(color='white',size=20)),
         xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
+            title_font=dict(color='white',size=20),
+            tickfont=dict(color='white',size=20),
             dtick=1,
             showgrid=True,
             gridcolor='gray'
         ),
         yaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
+            title_font=dict(color='white',size=20),
+            tickfont=dict(color='white',size=20),
             showgrid=True,
             gridcolor='gray'
         ),
@@ -352,8 +352,8 @@ with tab2:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20))
     )
     st.plotly_chart(fig_maxpower, use_container_width=True)
 
@@ -390,8 +390,8 @@ with tab2:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'))
+        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20))
     )
     st.plotly_chart(fig_occupancy, use_container_width=True)
 
@@ -413,8 +413,8 @@ with tab2:
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
         showlegend=False
     )
     st.plotly_chart(fig_compare, use_container_width=True)
@@ -580,6 +580,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
