@@ -233,6 +233,59 @@ with tab1:
         bargap=0.2,
         height=350
     )
+        # ---- Load and clean personenautos_huidig.csv ----
+    df_huidig = pd.read_csv("personenautos_huidig.csv")
+
+    # Fix potential column name typo
+    df_huidig.rename(columns={'Elekrticiteit': 'Elektriciteit'}, inplace=True)
+
+    # Melt into long format for Plotly (jaar stays as x-axis)
+    df_huidig_melted = df_huidig.melt(
+        id_vars='jaar',  # lowercase
+        var_name='Brandstof',
+        value_name='Aantal (miljoen)'
+    )
+
+    huidig_color_map = {
+        'Benzine': 'dodgerblue',
+        'Diesel': 'saddlebrown',
+        'LPG': 'mediumpurple',
+        'Elektriciteit': 'gold'
+    }
+
+    # ---- Base line chart ----
+    line_fig = px.line(
+        df_huidig_melted,
+        x='jaar',  # lowercase
+        y='Aantal (miljoen)',
+        color='Brandstof',
+        color_discrete_map=huidig_color_map,
+        title="Aantal personenauto's actief (2019–2025)",
+        markers=True
+    )
+
+    line_fig.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=20),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            dtick=1,
+            showgrid=True,
+            gridcolor='gray'
+        ),
+        yaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            showgrid=True,
+            gridcolor='gray'
+        ),
+        hovermode='x unified',
+        width=800,
+        height=350
+    )
 
     # ---- Place both graphs next to each other ----
     col1, col2 = st.columns(2)
@@ -491,6 +544,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
