@@ -251,25 +251,26 @@ with tab1:
         textposition='auto',
         offsetgroup=None,
         alignmentgroup=None
-     )
-
- bar_fig.update_layout(
-    width=800,
-    plot_bgcolor='#1e222b',
-    paper_bgcolor='#1e222b',
-    font=dict(color='white', size=20),
-    legend=dict(font=dict(color='white')),
-    xaxis=dict(
-        title_font=dict(color='white'),
-        tickfont=dict(color='white'),
-        type='category',
-        categoryorder='array',
-        categoryarray=totalen['brandstof'].tolist(),
-    ),
-    yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-    bargap=0.2,
-    height=350
     )
+
+    bar_fig.update_layout(
+        width=800,
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=20),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            type='category',
+            categoryorder='array',
+            categoryarray=totalen['brandstof'].tolist(),
+        ),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        bargap=0.2,
+        height=350
+    )
+
 
 
     # ---- Load and clean personenautos_huidig.csv ----
@@ -591,6 +592,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
