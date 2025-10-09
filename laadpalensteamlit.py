@@ -195,85 +195,7 @@ with tab1:
     st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---- Bar chart ----
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-
-    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
-    bar_fig = px.bar(
-        totalen,
-        x='brandstof',
-        y='aantal',
-        color='brandstof',
-        color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
-        text='aantal'
-    )
-
-    bar_fig.update_traces(
-        width=0.6,
-        textposition='auto',
-        offsetgroup=None,
-        alignmentgroup=None
-    )
-
-    bar_fig.update_layout(
-        width=800,
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            type='category',
-            categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist(),
-        ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        bargap=0.2,
-        height=350
-    )
-    # ---- Bar chart ----
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-
-    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
-    bar_fig = px.bar(
-        totalen,
-        x='brandstof',
-        y='aantal',
-        color='brandstof',
-        color_discrete_map=color_map,
-        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
-        text='aantal'
-    )
-
-    bar_fig.update_traces(
-        width=0.6,
-        textposition='auto',
-        offsetgroup=None,
-        alignmentgroup=None
-    )
-
-    bar_fig.update_layout(
-        width=800,
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white', size=20),
-        legend=dict(font=dict(color='white')),
-        xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            type='category',
-            categoryorder='array',
-            categoryarray=totalen['brandstof'].tolist(),
-        ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
-        bargap=0.2,
-        height=350
-    )
-
-
-
+    
     # ---- Load and clean personenautos_huidig.csv ----
 df_huidig = pd.read_csv("personenautos_huidig.csv")
 
@@ -330,25 +252,25 @@ line_fig.update_layout(
      # ---- Place both graphs next to each other ----
     col1, col2 = st.columns(2)
 
-    with col1:
-        st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
+        with col1:
+            st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
      
-        st.markdown(
+            st.markdown(
             "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
             "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
-        )
+            )
     
-    with col2:
-        st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
+        with col2:
+            st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # ---- Sources ----
-        st.markdown(
+            st.markdown(
             "Bron (actieve voertuigen): "
             "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
             "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
-        )
+            )
 
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -583,6 +505,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
