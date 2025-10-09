@@ -232,6 +232,46 @@ with tab1:
         bargap=0.2,
         height=350
     )
+    # ---- Bar chart ----
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
+    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
+    bar_fig = px.bar(
+        totalen,
+        x='brandstof',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+        text='aantal'
+    )
+
+    bar_fig.update_traces(
+        width=0.6,
+        textposition='auto',
+        offsetgroup=None,
+        alignmentgroup=None
+    )
+
+    bar_fig.update_layout(
+        width=800,
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=20),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            type='category',
+            categoryorder='array',
+            categoryarray=totalen['brandstof'].tolist(),
+        ),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        bargap=0.2,
+        height=350
+    )
+
+
 
     # ---- Load and clean personenautos_huidig.csv ----
     df_huidig = pd.read_csv("personenautos_huidig.csv")
@@ -249,6 +289,7 @@ with tab1:
 
     # Convert to numeric
     df_huidig['Jaar'] = pd.to_numeric(df_huidig['Jaar'], errors='coerce')
+
 
     # Melt into long format for Plotly
     df_huidig_melted = df_huidig.melt(
@@ -271,9 +312,10 @@ with tab1:
         y='Aantal (miljoen)',
         color='Brandstof',
         color_discrete_map=huidig_color_map,
-        title="Aantal motorvoertuigen actief (2019–2025)",
-        markers=True  # show data points
+        title="Aantal motorvoertuigen actief (2019–2025)"
     )
+
+
 
     line_fig.update_layout(
         plot_bgcolor='#1e222b',
@@ -281,23 +323,41 @@ with tab1:
         font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
         xaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            dtick=1,
-            showgrid=True,
-            gridcolor='gray'
-        ),
-        yaxis=dict(
-            title_font=dict(color='white'),
-            tickfont=dict(color='white'),
-            showgrid=True,
-            gridcolor='gray'
-        ),
+        title_font=dict(color='white'),
+        tickfont=dict(color='white'),
+        range=[2019, 2025],  # 👈 Forces axis to start at 2019 and end at 2030
+        dtick=1              # 👈 Shows every year as a tick mark
+    ),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified',
         width=800,
         height=350
     )
 
+# ---- Place both graphs next to each other ----
+col1, col2 = st.columns(2)
+
+with col1:
+    st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
+     
+    st.markdown(
+        "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
+        "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+    )
+
+with col2:
+    st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Sources ----
+   
+
+    st.markdown(
+        "Bron (actieve voertuigen): "
+        "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
+        "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
+    )
 
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -532,9 +592,6 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-
-
 
 
 
