@@ -419,8 +419,44 @@ with tab2:
     )
     st.plotly_chart(fig_compare, use_container_width=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
 
+     # ===========================
+    # 4. 🔥 Heatmap: gemiddelde laadtijd per dag en uur
+    # ===========================
+    df_lp['Hour'] = df_lp['Started'].dt.hour
+    df_lp['DayOfWeek'] = df_lp['Started'].dt.day_name()
+
+    # Bepaal gemiddelde laadtijd per uur en dag
+    pivot_heatmap = df_lp.pivot_table(
+        index='DayOfWeek',
+        columns='Hour',
+        values='ChargeTime',
+        aggfunc='mean'
+    )
+
+    # Zorg dat dagen in juiste volgorde staan
+    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    pivot_heatmap = pivot_heatmap.reindex(day_order)
+
+    fig_heatmap = px.imshow(
+        pivot_heatmap,
+        color_continuous_scale='Viridis',
+        title='Gemiddelde laadtijd per uur en dag van de week',
+        labels=dict(x='Uur van de dag', y='Dag van de week', color='Gemiddelde laadtijd (uur)'),
+        width=800
+    )
+
+    fig_heatmap.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=18),
+        coloraxis_colorbar=dict(title='Gem. laadtijd (uur)')
+    )
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 # -----------------------
 # Cache: laad laadpalen (OpenChargeMap)
 # -----------------------
@@ -544,6 +580,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
