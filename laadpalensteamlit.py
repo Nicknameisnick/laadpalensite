@@ -350,12 +350,14 @@ for brand in df_huidig_melted['Brandstof'].unique():
         height=350
     )
 
-    # ---- Place both graphs next to each other ----
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(bar_fig, use_container_width=True)
-    with col2:
-        st.plotly_chart(line_fig, use_container_width=True)
+# ---- Place both graphs next to each other ----
+col1, col2 = st.columns(2)
+
+with col1:
+    st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
+
+with col2:
+    st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -604,6 +606,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
