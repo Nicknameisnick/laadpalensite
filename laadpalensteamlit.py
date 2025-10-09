@@ -64,9 +64,10 @@ tab1, tab2, tab3 = st.tabs([
 # TAB 1: Personenauto’s per kwartaal
 # ===============================
 with tab1:
+   
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
-    # ---- Load CSV ----
+    # Lees CSV in
     df_raw = pd.read_csv("personenautos_csb.csv")
     df = df_raw.copy()
     new_cols = df.iloc[0].tolist()
@@ -83,7 +84,6 @@ with tab1:
     for col in ['Benzine', 'Diesel', 'elektrisch', 'hybride']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # ---- Parse quarter to datetime ----
     def parse_quarter(q):
         try:
             year_part, q_part = q.split()[:2]
@@ -97,13 +97,13 @@ with tab1:
     df['datum'] = df['kwartaal'].apply(parse_quarter)
     df = df.dropna(subset=['datum'])
 
-    # ---- Melt dataframe ----
     melted = df.melt(
         id_vars='datum',
         value_vars=['Benzine', 'Diesel', 'elektrisch', 'hybride'],
         var_name='brandstof',
         value_name='aantal'
-    ).sort_values('datum')
+    )
+    melted = melted.sort_values('datum')
 
     color_map = {
         'Benzine': 'dodgerblue',
@@ -112,7 +112,7 @@ with tab1:
         'hybride': 'limegreen'
     }
 
-    # ---- Filter by date and brandstof ----
+    # Date filter
     min_date = melted['datum'].min().to_pydatetime()
     max_date = melted['datum'].max().to_pydatetime()
 
@@ -133,14 +133,13 @@ with tab1:
     )
     filtered = filtered[filtered['brandstof'].isin(selected_brandstoffen)]
 
-    # ---- Regression toggles ----
+    # Buttons for regression lines
     show_reg_benzine = st.toggle("Toon regressielijn Benzine", value=False)
     show_reg_elektrisch = st.toggle("Toon regressielijn Elektrisch", value=False)
     show_reg_hybride = st.toggle("Toon regressielijn Hybride", value=False)
     show_reg_diesel = st.toggle("Toon regressielijn Diesel", value=False)
 
-    # ---- Line chart ----
-    line_fig = px.line(
+    fig = px.line(
         filtered,
         x='datum',
         y='aantal',
@@ -149,8 +148,9 @@ with tab1:
         title="Aantal verkochte personenauto’s per brandstofcategorie (per kwartaal)"
     )
 
-    # Add regression lines
+    # Add regressions with future projection to 2030
     future_end = pd.Timestamp('2030-01-01')
+
     for brand in ['Benzine', 'elektrisch', 'hybride', 'Diesel']:
         show_toggle = (
             (brand == 'Benzine' and show_reg_benzine) or
@@ -161,16 +161,20 @@ with tab1:
         if show_toggle:
             data = filtered[filtered['brandstof'] == brand].sort_values('datum')
             if len(data) > 1:
+                # Prepare regression input
                 x = np.arange(len(data))
                 y = data['aantal'].values
                 slope, intercept, r_value, p_value, _ = stats.linregress(x, y)
+
+                # Predict future values until 2030
                 last_date = data['datum'].max()
-                future_dates = pd.date_range(last_date, future_end, freq='QS')[1:]
+                future_dates = pd.date_range(last_date, future_end, freq='QS')[1:]  # quarterly steps
                 total_x = np.arange(len(data) + len(future_dates))
                 predicted = intercept + slope * total_x
                 full_dates = pd.concat([data['datum'], pd.Series(future_dates)], ignore_index=True)
 
-                line_fig.add_scatter(
+                # Add regression line
+                fig.add_scatter(
                     x=full_dates,
                     y=predicted,
                     mode='lines',
@@ -178,7 +182,7 @@ with tab1:
                     line=dict(color=color_map[brand], dash='dot')
                 )
 
-    line_fig.update_layout(
+    fig.update_layout(
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
@@ -188,7 +192,12 @@ with tab1:
         hovermode='x unified'
     )
 
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # ---- Bar chart ----
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+
     totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
     bar_fig = px.bar(
         totalen,
@@ -200,37 +209,54 @@ with tab1:
         text='aantal'
     )
 
-    bar_fig.update_traces(width=0.6, textposition='auto')
+    bar_fig.update_traces(
+        width=0.6,
+        textposition='auto',
+        offsetgroup=None,
+        alignmentgroup=None
+    )
+
     bar_fig.update_layout(
         width=800,
         plot_bgcolor='#1e222b',
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'),
-                   type='category', categoryorder='array', categoryarray=totalen['brandstof'].tolist()),
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            type='category',
+            categoryorder='array',
+            categoryarray=totalen['brandstof'].tolist(),
+        ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         bargap=0.2,
         height=350
     )
 
-    # ---- Place both graphs side by side ----
+    # ---- Place both graphs next to each other ----
     col1, col2 = st.columns(2)
+
     with col1:
-        st.plotly_chart(bar_fig, use_container_width=True)
+        st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
+     
         st.markdown(
             "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
             "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
         )
-
+    
     with col2:
-        st.plotly_chart(line_fig, use_container_width=True)
+        st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ---- Sources ----
         st.markdown(
-            "Bron (actieve voertuigen): [Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
+            "Bron (actieve voertuigen): "
+            "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
             "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
         )
 
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -465,6 +491,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
