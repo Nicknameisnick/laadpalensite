@@ -269,11 +269,16 @@ with tab1:
         height=350
     )
 
-    # ---- Load and plot personenautos_huidig.csv ----
-    df_huidig = pd.read_csv("personenautos_huidig.csv")
+# ---- Load and clean personenautos_huidig.csv ----
+df_huidig = pd.read_csv("personenautos_huidig.csv")
 
-    # Fix potential column name typo
-    df_huidig.rename(columns={'Elekrticiteit': 'Elektriciteit'}, inplace=True)
+# Drop index column if it exists
+if 'Unnamed: 0' in df_huidig.columns:
+    df_huidig = df_huidig.drop(columns=['Unnamed: 0'])
+
+# Fix potential column name typo
+df_huidig.rename(columns={'Elekrticiteit': 'Elektriciteit'}, inplace=True)
+
 
     # Ensure 'Jaar' is a proper column, not index
     if 'Jaar' not in df_huidig.columns:
@@ -599,6 +604,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
