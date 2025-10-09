@@ -343,8 +343,8 @@ with tab2:
         x='MaxPower_bin',
         y='Frequency',
         text='Frequency',
-        title='Frequentie van MaxPower bij laadpalen (in 1 kW-bins)',
-        labels={'MaxPower_bin': 'Max Power (kW-bins)', 'Frequency': 'Aantal keren'},
+        title='Frequentie van MaxPower bij laadpalen (in 250W-bins)',
+        labels={'MaxPower_bin': 'Max Power (250W-bins)', 'Frequency': 'Aantal keren'},
         width=800
     )
     fig_maxpower.update_traces(textposition='auto')
@@ -574,6 +574,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
