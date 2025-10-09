@@ -317,12 +317,16 @@ with tab1:
             showgrid=True,
             gridcolor='gray'            
     ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'),showgrid=True,
-        gridcolor='gray'),
+        yaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            showgrid=True,
+            gridcolor='gray'
+        ),  
         hovermode='x unified',
         width=800,
         height=350
-    )
+     )
 
 st.plotly_chart(line_fig, use_container_width=True)
 # ---- Place both graphs next to each other ----
@@ -583,6 +587,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
