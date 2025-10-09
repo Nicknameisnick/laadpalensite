@@ -232,13 +232,98 @@ with tab1:
         bargap=0.2,
         height=350
     )
+    # ---- Bar chart ----
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
-    st.plotly_chart(bar_fig, use_container_width=False)
+    totalen = filtered.groupby('brandstof', as_index=False)['aantal'].sum()
+    bar_fig = px.bar(
+        totalen,
+        x='brandstof',
+        y='aantal',
+        color='brandstof',
+        color_discrete_map=color_map,
+        title="Totaal aantal verkochte auto's per brandstofcategorie (geselecteerde periode)",
+        text='aantal'
+    )
+
+    bar_fig.update_traces(
+        width=0.6,
+        textposition='auto',
+        offsetgroup=None,
+        alignmentgroup=None
+    )
+
+    bar_fig.update_layout(
+        width=800,
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=20),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            type='category',
+            categoryorder='array',
+            categoryarray=totalen['brandstof'].tolist(),
+        ),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        bargap=0.2,
+        height=350
+    )
+
+    # ---- Load and plot personenautos_huidig.csv ----
+    df_huidig = pd.read_csv("personenautos_huidig.csv")
+    df_huidig.rename(columns={'Elekrticiteit': 'Elektriciteit'}, inplace=True)  # fix typo
+    df_huidig['Jaar'] = df_huidig.index + 2019 if 'Jaar' not in df_huidig.columns else df_huidig['Jaar']
+    df_huidig = df_huidig.melt(id_vars='Jaar', var_name='Brandstof', value_name='Aantal (miljoen)')
+
+    huidig_color_map = {
+        'Benzine': 'dodgerblue',
+        'Diesel': 'saddlebrown',
+        'LPG': 'mediumpurple',
+        'Elektriciteit': 'gold'
+    }
+
+    line_fig = px.line(
+        df_huidig,
+        x='Jaar',
+        y='Aantal (miljoen)',
+        color='Brandstof',
+        color_discrete_map=huidig_color_map,
+        title="Aantal motorvoertuigen actief (2019–2025)"
+    )
+
+    line_fig.update_layout(
+        plot_bgcolor='#1e222b',
+        paper_bgcolor='#1e222b',
+        font=dict(color='white', size=20),
+        legend=dict(font=dict(color='white')),
+        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        hovermode='x unified',
+        width=800,
+        height=350
+    )
+
+    # ---- Place both graphs next to each other ----
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(bar_fig, use_container_width=True)
+    with col2:
+        st.plotly_chart(line_fig, use_container_width=True)
+
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # ---- Sources ----
     st.markdown(
-        "Bron: [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
+        "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
         "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+    )
+
+    st.markdown(
+        "Bron (actieve voertuigen): "
+        "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
+        "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
     )
 
 with tab2:
@@ -474,6 +559,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
