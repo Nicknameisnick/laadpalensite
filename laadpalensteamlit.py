@@ -334,7 +334,12 @@ with tab1:
         paper_bgcolor='#1e222b',
         font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
-        xaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        xaxis=dict(
+        title_font=dict(color='white'),
+        tickfont=dict(color='white'),
+        range=[2019, 2030],  # 👈 Forces axis to start at 2019 and end at 2030
+        dtick=1              # 👈 Shows every year as a tick mark
+    ),
         yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
         hovermode='x unified',
         width=800,
@@ -595,6 +600,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
