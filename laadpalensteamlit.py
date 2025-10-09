@@ -64,6 +64,28 @@ tab1, tab2, tab3 = st.tabs([
 # TAB 1: Personenauto’s per kwartaal
 # ===============================
 with tab1:
+    # ---- Place both graphs next to each other ----
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
+     
+        st.markdown(
+            "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
+            "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
+        )
+    
+    with col2:
+        st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # ---- Sources ----
+        st.markdown(
+            "Bron (actieve voertuigen): "
+            "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
+            "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
+        )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
     # Lees CSV in
@@ -327,30 +349,6 @@ line_fig.update_layout(
     height=350
 )
 
-    # ---- Place both graphs next to each other ----
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.plotly_chart(bar_fig, use_container_width=True, key="bar_fig_chart")
-     
-        st.markdown(
-        "Bron (verkoopdata): [CBS - Verkochte wegvoertuigen; nieuw en tweedehands, voertuigsoort, brandstof]"
-        "(https://opendata.cbs.nl/#/CBS/nl/dataset/85898NED/table)"
-        )
-    
-    with col2:
-        st.plotly_chart(line_fig, use_container_width=True, key="line_fig_chart")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # ---- Sources ----
-   
-
-        st.markdown(
-        "Bron (actieve voertuigen): "
-        "[Compendium voor de Leefomgeving - Aantal motorvoertuigen actief, 2019–2025]"
-        "(https://www.clo.nl/indicatoren/nl002627-aantal-motorvoertuigen-actief-2019-2025#:~:text=Het%20personenautopark%20is%20tussen%202019,9%20tot%207%2C2%20procent.)"
-        )
 
 with tab2:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -585,6 +583,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
