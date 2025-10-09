@@ -433,7 +433,8 @@ with tab2:
         zmin=-1, zmax=1,  # full correlation range
         title='Correlatie tussen variabelen in laadpaaldata',
         labels=dict(x='Variabelen', y='Variabelen', color='Correlatiecoëfficiënt'),
-        width=800
+        width=1200,
+        height=1200
     )
 
     fig_heatmap.update_layout(
@@ -573,6 +574,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
