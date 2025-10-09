@@ -317,7 +317,7 @@ with tab1:
             showgrid=True,
             gridcolor='gray'            
     ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')showgrid=True,
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white'),showgrid=True,
         gridcolor='gray'),
         hovermode='x unified',
         width=800,
@@ -583,6 +583,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
