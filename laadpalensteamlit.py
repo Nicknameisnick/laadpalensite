@@ -276,24 +276,11 @@ with tab1:
     # ---- Load and clean personenautos_huidig.csv ----
     df_huidig = pd.read_csv("personenautos_huidig.csv")
 
-    # Drop index column if it exists
-    if 'Unnamed: 0' in df_huidig.columns:
-        df_huidig = df_huidig.drop(columns=['Unnamed: 0'])
-
     # Fix potential column name typo
     df_huidig.rename(columns={'Elekrticiteit': 'Elektriciteit'}, inplace=True)
 
-    # Ensure 'Jaar' is a proper column, not index
-    if 'Jaar' not in df_huidig.columns:
-        df_huidig = df_huidig.reset_index().rename(columns={'index': 'Jaar'})
-
-    # Convert to numeric
-    df_huidig['Jaar'] = pd.to_numeric(df_huidig['Jaar'], errors='coerce')
-
-
-    # Melt into long format for Plotly
     df_huidig_melted = df_huidig.melt(
-        id_vars='Jaar',
+        id_vars='jaar',
         var_name='Brandstof',
         value_name='Aantal (miljoen)'
     )
@@ -312,7 +299,8 @@ with tab1:
         y='Aantal (miljoen)',
         color='Brandstof',
         color_discrete_map=huidig_color_map,
-        title="Aantal motorvoertuigen actief (2019–2025)"
+        title="Aantal personenauto's actief (2019–2025)",
+        markers=True
     )
 
 
@@ -323,17 +311,20 @@ with tab1:
         font=dict(color='white', size=20),
         legend=dict(font=dict(color='white')),
         xaxis=dict(
-        title_font=dict(color='white'),
-        tickfont=dict(color='white'),
-        range=[2019, 2025],  # 👈 Forces axis to start at 2019 and end at 2030
-        dtick=1              # 👈 Shows every year as a tick mark
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
+            dtick=1,
+            showgrid=True,
+            gridcolor='gray'            
     ),
-        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title_font=dict(color='white'), tickfont=dict(color='white')showgrid=True,
+        gridcolor='gray'),
         hovermode='x unified',
         width=800,
         height=350
     )
 
+st.plotly_chart(line_fig, use_container_width=True)
 # ---- Place both graphs next to each other ----
 col1, col2 = st.columns(2)
 
@@ -592,6 +583,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
