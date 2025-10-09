@@ -327,7 +327,6 @@ line_fig.update_layout(
     height=350
 )
 
-st.plotly_chart(line_fig, use_container_width=True)
 # ---- Place both graphs next to each other ----
 col1, col2 = st.columns(2)
 
@@ -586,6 +585,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
