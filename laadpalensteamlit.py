@@ -413,6 +413,10 @@ with tab2:
         labels={'TimeHours': 'Tijd (uur)', 'Type': 'Soort tijd'},
         width=800
     )
+    fig_compare.update_layout(font=dict(color='white', size=20),
+        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
+        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20))
+                             )
 
     
     st.plotly_chart(fig_compare, use_container_width=True)
@@ -572,6 +576,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
