@@ -328,7 +328,7 @@ with tab2:
     # 1. MaxPower frequency (250W bins)
     # ===========================
     bin_width = 250
-    max_power_bins = range(2500, int(df_lp['MaxPower'].max()) + bin_width, bin_width)
+    max_power_bins = range(2750, int(df_lp['MaxPower'].max()) + bin_width, bin_width)
     df_lp['MaxPower_bin'] = pd.cut(df_lp['MaxPower'], bins=max_power_bins)
 
     maxpower_freq = df_lp['MaxPower_bin'].value_counts().reset_index()
@@ -574,6 +574,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
