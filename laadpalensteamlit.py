@@ -400,23 +400,20 @@ with tab2:
     # 3. ConnectedTime vs ChargeTime boxplot
     # ===========================
     df_compare = df_lp[['ConnectedTime', 'ChargeTime']].melt(var_name='Type', value_name='TimeHours')
+    df_compare['Type'] = df_compare['Type'].replace({
+    'ConnectedTime': 'Verbonden tijd',
+    'ChargeTime': 'Laadtijd'})
 
     fig_compare = px.box(
         df_compare,
         x='Type',
         y='TimeHours',
         color='Type',
-        title='Vergelijking tussen ConnectedTime en ChargeTime',
-        labels={'TimeHours': 'Tijd (uur)'},
+        title='Vergelijking tussen verbonden tijd en laadtijd',
+        labels={'TimeHours': 'Tijd (uur)', 'Type': 'Soort tijd'},
         width=800
-    )
-    fig_compare.update_layout(
-        plot_bgcolor='#1e222b',
-        paper_bgcolor='#1e222b',
-        font=dict(color='white', size=20),
-        xaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
-        yaxis=dict(title_font=dict(color='white',size=20), tickfont=dict(color='white',size=20)),
-        showlegend=False
+)
+
     )
     st.plotly_chart(fig_compare, use_container_width=True)
 
@@ -575,6 +572,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
