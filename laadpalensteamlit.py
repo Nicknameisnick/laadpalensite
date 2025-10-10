@@ -412,7 +412,7 @@ with tab2:
         title='Vergelijking tussen verbonden tijd en laadtijd',
         labels={'TimeHours': 'Tijd (uur)', 'Type': 'Soort tijd'},
         width=800
-)
+    )
 
     )
     st.plotly_chart(fig_compare, use_container_width=True)
@@ -572,6 +572,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
