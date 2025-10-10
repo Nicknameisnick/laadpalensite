@@ -385,6 +385,7 @@ with tab2:
         labels={'Hour': 'Uur van de dag', 'AvgOccupancy': 'Gemiddeld aantal laadpalen in gebruik'},
         width=800
     )
+    fig_occupancy.update_xaxes(dtick=1, range=[-0.5, 23.5]) 
     fig_occupancy.update_traces(texttemplate='%{text:.2f}', textposition='auto')
     fig_occupancy.update_layout(
         plot_bgcolor='#1e222b',
@@ -574,6 +575,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
