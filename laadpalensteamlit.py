@@ -22,7 +22,6 @@ st.markdown(
     """
     <style>
    .stApp {
-        background-image: url('https://www.power-technology.com/wp-content/uploads/sites/21/2021/09/shutterstock_1864450102-scaled.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -576,6 +575,7 @@ with tab3:
     st_folium(m, width=1750, height=750)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
